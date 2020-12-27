@@ -189,7 +189,7 @@ bool fbv3_init(void)
     return status == LIBUSB_SUCCESS ? true : false;
 }
 
-/// @breif Get if pedal ready for commands
+/// @brief Get if pedal ready for commands
 ///
 /// @return True if FBV module has authenticated with amp
 bool fbv3_ready(void)
@@ -197,7 +197,7 @@ bool fbv3_ready(void)
     return fpv_clone_ready;
 }
 
-/// @breif Process function for module, called in main loop.
+/// @brief Process function for module, called in main loop.
 ///        This is the statemachine that authaticates, and sends commands.
 ///
 /// @return True on success
@@ -517,7 +517,7 @@ void fbv3_print_usb_error(int16_t error) /// usb error code
     fprintf(stderr,"\n");
 }
 
-/// @breif Clean up usb handle
+/// @brief Clean up usb handle
 void fbv3_close(void)
 {
     fprintf(stderr, "\n");
