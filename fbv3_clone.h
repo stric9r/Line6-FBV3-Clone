@@ -18,6 +18,8 @@ enum effects
     GATE,
     REVERB,
     WAH,
+    BANK_UP,
+    BANK_DOWN,
     EFFECTS_MAX
 };
 
@@ -33,6 +35,8 @@ struct fbv3_state
   int gate_state;
   int reverb_state;
   int wah_state;
+  int bank_up_state;
+  int bank_down_state;
 };
 
 bool fbv3_init(void);

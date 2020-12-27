@@ -14,13 +14,15 @@
 /// State machine states for commnication with L6 Spider V Amp
 enum comm_state
 {
-    CONNECT, /// On first connection, only used once per session
-    AUTH1,   /// After first connection, authenicate 1 - 3, only used once per session
+    CONNECT,    /// On first connection, only used once per session
+    AUTH1,      /// After first connection, authenicate 1 - 3, only used once per session
     AUTH2,
     AUTH3, 
-    WAIT,    /// Wait for action from IO
-    CTRL1,   /// Control hello msg sent before every control command
-    CTRL2,   /// Control command then back to wait state
+    WAIT,       /// Wait for action from IO
+    CTRL1,      /// Control hello msg sent before every control command
+    CTRL2,      /// Control command then back to wait state
+    BANK_UP1,   /// Bank up/down command then back to wait state
+    BANK_DOWN1,
     COMM_STATE_MAX,
 };
 
@@ -36,7 +38,7 @@ static struct command commands_to_process[CMD_MAX_SZ]; /// Storage for commands 
 
 
 // note: Data in these arrays were populated using observations from wireshark usb tracing.
-// this program augments certain indexes to create new commands.  See "PedalNotes.xlsx"
+// this program augments certain indexes to create new commands.  See "Line6_Spider_V_USB_Protocol.xlsx"
 static unsigned char connect_msg[CONNECT_SZ] = {0x04, 0xf0, 0x7e, 0x7f, 0x07, 0x06, 0x01, 0xf7};
 
 static unsigned char auth_msg1[AUTH_40_SZ] = {0x04, 0xF0, 0x00, 0x01, 
@@ -72,29 +74,40 @@ static unsigned char auth_msg3[AUTH_28_SZ] = {0x04, 0xF0, 0x00, 0x01,
                                               0x07, 0x00, 0x00, 0xF7};                                
                                
 static unsigned char ctrl_msg1[CTRL_40_SZ] = {0x04, 0xf0, 0x00, 0x01, 
-                                            0x04, 0x0c, 0x22, 0x00, 
-                                            0x04, 0x4d, 0x00, 0x00, 
-                                            0x04, 0x00, 0x00, 0x07, 
-                                            0x04, 0x00, 0x0a, 0x00, 
-                                            0x04, 0x00, 0x00, 0x10, 
-                                            0x04, 0x00, 0x00, 0x00, 
-                                            0x04, 0x00, 0x00, 0x00, 
-                                            0x04, 0x00, 0x00, 0x00, 
-                                            0x06, 0x00, 0xf7, 0x00};
+                                              0x04, 0x0c, 0x22, 0x00, 
+                                              0x04, 0x4d, 0x00, 0x00, 
+                                              0x04, 0x00, 0x00, 0x07, 
+                                              0x04, 0x00, 0x0a, 0x00, 
+                                              0x04, 0x00, 0x00, 0x10, 
+                                              0x04, 0x00, 0x00, 0x00, 
+                                              0x04, 0x00, 0x00, 0x00, 
+                                              0x04, 0x00, 0x00, 0x00, 
+                                              0x06, 0x00, 0xf7, 0x00};
                            
 static unsigned char ctrl_msg2 [CTRL_52_SZ] = {0x04, 0xf0, 0x00, 0x01, 
-                                          0x04, 0x0c, 0x22, 0x00, 
-                                          0x04, 0x4d, 0x00, 0x01, 
-                                          0x04, 0x00, 0x00, 0x0f, 
-                                          0x04, 0x00, 0x74, 0x03,
-                                          0x04, 0x00, 0x00, 0x47, 
-                                          0x04, 0x03, 0x00, 0x00, 
-                                          0x04, 0x00, 0x03, 0x00, 
-                                          0x04, 0x00, 0x00, 0x01, 
-                                          0x04, 0x00, 0x00, 0x00, 
-                                          0x04, 0x00, 0x00, 0x00, 
-                                          0x04, 0x00, 0x00, 0x00, 
-                                          0x05, 0xf7, 0x00, 0x00};
+                                               0x04, 0x0c, 0x22, 0x00, 
+                                               0x04, 0x4d, 0x00, 0x01, 
+                                               0x04, 0x00, 0x00, 0x0f, 
+                                               0x04, 0x00, 0x74, 0x03,
+                                               0x04, 0x00, 0x00, 0x47, 
+                                               0x04, 0x03, 0x00, 0x00, 
+                                               0x04, 0x00, 0x03, 0x00, 
+                                               0x04, 0x00, 0x00, 0x01, 
+                                               0x04, 0x00, 0x00, 0x00, 
+                                               0x04, 0x00, 0x00, 0x00, 
+                                               0x04, 0x00, 0x00, 0x00, 
+                                               0x05, 0xf7, 0x00, 0x00};
+
+static unsigned char bank_msg1[BANK_40_SZ] = {0x04, 0xF0, 0x00, 0x01,
+                                              0x04, 0x0C, 0x22, 0x00,
+                                              0x04, 0x4D, 0x00, 0x00,
+                                              0x04, 0x00, 0x00, 0x0B,
+                                              0x04, 0x00, 0x0D, 0x00,
+                                              0x04, 0x00, 0x00, 0x04,
+                                              0x04, 0x00, 0x00, 0x00,
+                                              0x04, 0x00, 0x01, 0x00,
+                                              0x04, 0x00, 0x00, 0x00,
+                                              0x06, 0x00, 0xF7, 0x00};
 
 /*variables*/
 
@@ -108,7 +121,7 @@ static uint8_t command_index = 0;     /// Used to loop through commands to proce
 static bool fpv_clone_ready = false;  /// Used to signal the pedal can take commands
 
 /*function Prototypes*/
-static bool fbv3_process_commands(void);
+static comm_state fbv3_process_commands(void);
 static void fbv3_print_msg_data(const uint8_t* data, const size_t size, const char * description);
 static void fbv3_print_usb_error(const int16_t error);
 
@@ -304,6 +317,20 @@ bool fbv3_process(void)
 
             state = WAIT; //force back into wait to process next message
             break;
+        case BANK_UP:
+            buff_out = bank_msg1;
+            buff_out_sz = BANK_40_SZ;
+            strcpy(description, "BANK_UP MSG");
+
+            state = WAIT; //force back into wait to process next message
+            break;
+        case BANK_DOWN:
+            buff_out = bank_msg1;
+            buff_out_sz = BANK_40_SZ;
+            strcpy(description, "BANK_DOWN MSG");
+
+            state = WAIT; //force back into wait to process next message
+            break;
         default:
             fpv_clone_ready = false;
             return LIBUSB_ERROR_OTHER;
@@ -357,10 +384,10 @@ struct fbv3_state * fbv3_get_states(void)
 
 /// @brief Processes commands by putting them in the CTRL packet
 ///
-/// @return True if command found and added to CTRL packet
-static bool fbv3_process_commands(void)
+/// @return The comm state to go to next
+static comm_state fbv3_process_commands(void)
 {
-    bool ret = false;
+    comm_state ret = CTRL1; //assume control, will change below if needed
 
     //find first command, process, remove command,
     //then exit, next round gets next command
@@ -416,7 +443,18 @@ static bool fbv3_process_commands(void)
                         ctrl_msg2[PEDAL_TYPE_IDX]  = _WAH;
                         ctrl_msg2[PEDAL_ON_IDX]    = state;
                         break;
+                    case BANK_UP:
+                        bank_msg1[BANK_UP_DOWN_IDX] = UP;
+
+                        ret = BANK_UP1;
+                        break;
+                    case BANK_DOWN:
+                        bank_msg1[BANK_UP_DOWN_IDX] = DOWN;
+
+                        ret = BANK_DOWN1;
+                        break;
                     default:
+                        ret = WAIT;
                         break;
                 }
 

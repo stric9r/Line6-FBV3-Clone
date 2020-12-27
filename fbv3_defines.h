@@ -19,12 +19,14 @@
 #define AUTH_28_SZ 28
 #define CTRL_40_SZ 40
 #define CTRL_52_SZ 52
+#define BANK_40_SZ 40
 #define MAX_IN_SZ  64
 
 /// Index locations in packets
-#define PACKET_NUM_IDX 11
-#define PEDAL_TYPE_IDX 23
-#define PEDAL_ON_IDX   35
+#define PACKET_NUM_IDX   11
+#define PEDAL_TYPE_IDX   23
+#define PEDAL_ON_IDX     35
+#define BANK_UP_DOWN_IDX 30
 
 /// Pedal types, assigned at index PEDAL_TYPE_IDX
 #define _DELAY      0x46
@@ -43,6 +45,10 @@
 /// On off codes, assigned at index PEDAL_ON_IDX
 #define ON  1
 #define OFF 0
+
+/// Bank change codes
+#define UP 1
+#define DOWN 0
 
 /// Command array size 
 #define CMD_MAX_SZ 10
