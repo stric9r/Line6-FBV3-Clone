@@ -17,9 +17,9 @@
 #define CONNECT_SZ 8
 #define AUTH_40_SZ 40
 #define AUTH_28_SZ 28
-#define HELLO_SZ   40
-#define CTRL_SZ    52
-#define MAX_IN_SZ     64
+#define CTRL_40_SZ 40
+#define CTRL_52_SZ 52
+#define MAX_IN_SZ  64
 
 /// Index locations in packets
 #define PACKET_NUM_IDX 11

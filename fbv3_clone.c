@@ -19,8 +19,8 @@ enum comm_state
     AUTH2,
     AUTH3, 
     WAIT,    /// Wait for action from IO
-    HELLO,   /// Hello msg sent before every control command
-    CONTROL, /// Control command then back to wait state
+    CTRL1,   /// Control hello msg sent before every control command
+    CTRL2,   /// Control command then back to wait state
     COMM_STATE_MAX,
 };
 
@@ -71,7 +71,7 @@ static unsigned char auth_msg3[AUTH_28_SZ] = {0x04, 0xF0, 0x00, 0x01,
                                               0x04, 0x6A, 0x50, 0x00,
                                               0x07, 0x00, 0x00, 0xF7};                                
                                
-static unsigned char hello_msg[HELLO_SZ] = {0x04, 0xf0, 0x00, 0x01, 
+static unsigned char ctrl_msg1[CTRL_40_SZ] = {0x04, 0xf0, 0x00, 0x01, 
                                             0x04, 0x0c, 0x22, 0x00, 
                                             0x04, 0x4d, 0x00, 0x00, 
                                             0x04, 0x00, 0x00, 0x07, 
@@ -82,7 +82,7 @@ static unsigned char hello_msg[HELLO_SZ] = {0x04, 0xf0, 0x00, 0x01,
                                             0x04, 0x00, 0x00, 0x00, 
                                             0x06, 0x00, 0xf7, 0x00};
                            
-static unsigned char ctrl_msg [CTRL_SZ] = {0x04, 0xf0, 0x00, 0x01, 
+static unsigned char ctrl_msg2 [CTRL_52_SZ] = {0x04, 0xf0, 0x00, 0x01, 
                                           0x04, 0x0c, 0x22, 0x00, 
                                           0x04, 0x4d, 0x00, 0x01, 
                                           0x04, 0x00, 0x00, 0x0f, 
@@ -213,10 +213,10 @@ bool fbv3_process(void)
         return LIBUSB_ERROR_OTHER;
     }
 
-    //setup hello message and control message
+    //setup control messages
     //hard coded in arrays, just here to be explicit
-    //hello_msg[PACKET_NUM_IDX] = 0;  //first msg
-    //ctrl_msg[PACKET_NUM_IDX]  = 1;  //second msg
+    //ctrl_msg1[PACKET_NUM_IDX] = 0;  //first msg
+    //ctrl_msg2[PACKET_NUM_IDX] = 1;  //second msg
 
     //populate tranfer structure
     //on connect message
@@ -288,19 +288,19 @@ bool fbv3_process(void)
             buff_out = NULL;
             buff_out_sz = 0;
             
-            state = fbv3_process_commands() ? HELLO : WAIT; //on successful process, execute command
+            state = fbv3_process_commands() ? CTRL1 : WAIT; //on successful process, execute command
             break;
-        case HELLO: //HELLO and CONTROL only called when action needed
-            buff_out = hello_msg;
-            buff_out_sz = HELLO_SZ;
-            strcpy(description, "HELLO MSG");
+        case CTRL1: //CTRL1 and CTRL2 only called when action needed
+            buff_out = ctrl_msg1;
+            buff_out_sz = CTRL_40_SZ;
+            strcpy(description, "CTRL1 MSG");
 
-            state = CONTROL;
+            state = CTRL2;
             break;
-        case CONTROL:
-            buff_out = ctrl_msg;
-            buff_out_sz = CTRL_SZ;
-            strcpy(description, "CONTROL MSG");
+        case CTRL2:
+            buff_out = ctrl_msg2;
+            buff_out_sz = CTRL_52_SZ;
+            strcpy(description, "CTRL2 MSG");
 
             state = WAIT; //force back into wait to process next message
             break;
@@ -381,40 +381,40 @@ static bool fbv3_process_commands(void)
                 switch(effect)
                 {
                     case MODULATION:
-                        ctrl_msg[PEDAL_TYPE_IDX]  = _MODULATION;
-                        ctrl_msg[PEDAL_ON_IDX]    = state;
+                        ctrl_msg2[PEDAL_TYPE_IDX]  = _MODULATION;
+                        ctrl_msg2[PEDAL_ON_IDX]    = state;
                         break;
                     case DELAY:
-                        ctrl_msg[PEDAL_TYPE_IDX]  = _DELAY;
-                        ctrl_msg[PEDAL_ON_IDX]    = state;
+                        ctrl_msg2[PEDAL_TYPE_IDX]  = _DELAY;
+                        ctrl_msg2[PEDAL_ON_IDX]    = state;
                         break;
                     case STOMP:
-                        ctrl_msg[PEDAL_TYPE_IDX]  = _STOMP;
-                        ctrl_msg[PEDAL_ON_IDX]    = state;
+                        ctrl_msg2[PEDAL_TYPE_IDX]  = _STOMP;
+                        ctrl_msg2[PEDAL_ON_IDX]    = state;
                         break;
                     case VOLUME:
-                        ctrl_msg[PEDAL_TYPE_IDX]  = _VOLUME;
-                        ctrl_msg[PEDAL_ON_IDX]    = state;
+                        ctrl_msg2[PEDAL_TYPE_IDX]  = _VOLUME;
+                        ctrl_msg2[PEDAL_ON_IDX]    = state;
                         break;
                     case COMPRESSOR:
-                        ctrl_msg[PEDAL_TYPE_IDX]  = _COMPRESSOR;
-                        ctrl_msg[PEDAL_ON_IDX]    = state;
+                        ctrl_msg2[PEDAL_TYPE_IDX]  = _COMPRESSOR;
+                        ctrl_msg2[PEDAL_ON_IDX]    = state;
                         break;
                     case EQUALIZER:
-                        ctrl_msg[PEDAL_TYPE_IDX]  = _EQUALIZER;
-                        ctrl_msg[PEDAL_ON_IDX]    = state;
+                        ctrl_msg2[PEDAL_TYPE_IDX]  = _EQUALIZER;
+                        ctrl_msg2[PEDAL_ON_IDX]    = state;
                         break;
                     case GATE:
-                        ctrl_msg[PEDAL_TYPE_IDX]  = _GATE;
-                        ctrl_msg[PEDAL_ON_IDX]    = state;
+                        ctrl_msg2[PEDAL_TYPE_IDX]  = _GATE;
+                        ctrl_msg2[PEDAL_ON_IDX]    = state;
                         break;
                     case REVERB:
-                        ctrl_msg[PEDAL_TYPE_IDX]  = _REVERB;
-                        ctrl_msg[PEDAL_ON_IDX]    = state;
+                        ctrl_msg2[PEDAL_TYPE_IDX]  = _REVERB;
+                        ctrl_msg2[PEDAL_ON_IDX]    = state;
                         break;
                     case WAH:
-                        ctrl_msg[PEDAL_TYPE_IDX]  = _WAH;
-                        ctrl_msg[PEDAL_ON_IDX]    = state;
+                        ctrl_msg2[PEDAL_TYPE_IDX]  = _WAH;
+                        ctrl_msg2[PEDAL_ON_IDX]    = state;
                         break;
                     default:
                         break;
