@@ -1,5 +1,6 @@
 # Line-6-FBV3-Clone
-Clone of USB interface between linux (Raspberry Pi 4B) and a Line6 Spider V amplifier. 
+Clone of USB interface between Line6 FBV3 (foot controller) and a Line6 Spider V amplifier. 
+The FBV3 is simulated using a Raspberry Pi 4B.  
 It's current state only allows for authentication and simple ON/OFF commands. 
 This is still very much a work in progress.
 
