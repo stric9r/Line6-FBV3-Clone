@@ -13,7 +13,7 @@
 /// Mapping to wPi from raspberry pi 4b pinout on header
 /// Mapping can be seen by running command "gpio readall"
 #define DELAY_PIN       0 /*Pin 11*/
-#define MODULATION_PIN  0 /*Pin 13*/
+#define MODULATION_PIN  2 /*Pin 13*/
 #define STOMP_PIN       3 /*Pin 15*/
 #define VOLUME_PIN     23 /*Pin 33*/
 #define COMPRESSOR_PIN 24 /*Pin 35*/
@@ -21,7 +21,7 @@
 #define GATE_PIN       27 /*Pin 36*/
 #define REVERB_PIN     28 /*Pin 38*/
 #define WAH_PIN        29 /*Pin 40*/
-#define BANK_UP_PIN     2 /*Pin ??*/
+#define BANK_UP_PIN     0 /*Pin ??*/
 //#define BANK_DOWN_PIN   0 /*Pin ??*/
 
 /*prototypes*/
@@ -157,7 +157,7 @@ void gpio_to_fbv3_effect(void)
     {
         fprintf(stderr, "bank up pin %d local %d\n", pin_state, fbv3_states->bank_up_state);
         
-        fbv3_update_effect_switch(BANK_UP, true); //state is forced true in fbv3 clone module
+        fbv3_update_effect_switch(BANK_UP, true); //UP should be true
         fbv3_states->bank_up_state = pin_state;
     }
 
@@ -166,7 +166,7 @@ void gpio_to_fbv3_effect(void)
     {
         fprintf(stderr, "bank down pin %d local %d\n", pin_state, fbv3_states->bank_down_state);
         
-        fbv3_update_effect_switch(BANK_UP, false); //state is forced false in fbv3 clone module
+        fbv3_update_effect_switch(BANK_UP, false); //DOWN should be false
         fbv3_states->bank_down_state = pin_state;
     }*/
 

@@ -23,6 +23,7 @@ enum comm_state
     CTRL2,      /// Control command then back to wait state
     BANK_UP1,   /// Bank up/down command then back to wait state
     BANK_DOWN1,
+    BANK2,      /// Complete bank message
     COMM_STATE_MAX,
 };
 
@@ -107,6 +108,17 @@ static unsigned char bank_msg1[BANK_40_SZ] = {0x04, 0xF0, 0x00, 0x01,
                                               0x04, 0x00, 0x00, 0x00,
                                               0x04, 0x00, 0x01, 0x00,
                                               0x04, 0x00, 0x00, 0x00,
+                                              0x06, 0x00, 0xF7, 0x00};
+
+static unsigned char bank_msg2[BANK_40_SZ] = {0x04, 0xF0, 0x00, 0x01,
+                                              0x04, 0x0C, 0x22, 0x00,
+                                              0x04, 0x4D, 0x00, 0x01,
+                                              0x04, 0x00, 0x00, 0x0B,
+                                              0x04, 0x00, 0x0B, 0x00,
+                                              0x04, 0x00, 0x00, 0x04,
+                                              0x04, 0x00, 0x00, 0x3C,
+                                              0x04, 0x00, 0x7F, 0x7F,
+                                              0x04, 0x7F, 0x7F, 0x00,
                                               0x06, 0x00, 0xF7, 0x00};
 
 /*variables*/
@@ -317,20 +329,26 @@ bool fbv3_process(void)
 
             state = WAIT; //force back into wait to process next message
             break;
-        case BANK_UP:
+        case BANK_UP1:
             buff_out = bank_msg1;
             buff_out_sz = BANK_40_SZ;
             strcpy(description, "BANK_UP MSG");
 
-            state = WAIT; //force back into wait to process next message
+            state = BANK2;
             break;
-        case BANK_DOWN:
+        case BANK_DOWN1:
             buff_out = bank_msg1;
             buff_out_sz = BANK_40_SZ;
             strcpy(description, "BANK_DOWN MSG");
 
-            state = WAIT; //force back into wait to process next message
+            state = BANK2;
             break;
+        case BANK2:
+          buff_out = bank_msg2;
+          buff_out_sz = BANK_40_SZ;
+          strcpy(description, "BANK2 MSG");
+          
+          state = WAIT; //force back into wait to process next message
         default:
             fpv_clone_ready = false;
             return LIBUSB_ERROR_OTHER;
@@ -387,7 +405,7 @@ struct fbv3_state * fbv3_get_states(void)
 /// @return The comm state to go to next
 static enum comm_state fbv3_process_commands(void)
 {
-    enum comm_state ret = CTRL1; //assume control, will change below if needed
+    enum comm_state ret = WAIT;
 
     //find first command, process, remove command,
     //then exit, next round gets next command
@@ -410,47 +428,54 @@ static enum comm_state fbv3_process_commands(void)
                     case MODULATION:
                         ctrl_msg2[PEDAL_TYPE_IDX]  = _MODULATION;
                         ctrl_msg2[PEDAL_ON_IDX]    = state;
+                        ret = CTRL1;
                         break;
                     case DELAY:
                         ctrl_msg2[PEDAL_TYPE_IDX]  = _DELAY;
                         ctrl_msg2[PEDAL_ON_IDX]    = state;
+                        ret = CTRL1;
                         break;
                     case STOMP:
                         ctrl_msg2[PEDAL_TYPE_IDX]  = _STOMP;
                         ctrl_msg2[PEDAL_ON_IDX]    = state;
+                        ret = CTRL1;
                         break;
                     case VOLUME:
                         ctrl_msg2[PEDAL_TYPE_IDX]  = _VOLUME;
                         ctrl_msg2[PEDAL_ON_IDX]    = state;
+                        ret = CTRL1;
                         break;
                     case COMPRESSOR:
                         ctrl_msg2[PEDAL_TYPE_IDX]  = _COMPRESSOR;
                         ctrl_msg2[PEDAL_ON_IDX]    = state;
+                        ret = CTRL1;
                         break;
                     case EQUALIZER:
                         ctrl_msg2[PEDAL_TYPE_IDX]  = _EQUALIZER;
                         ctrl_msg2[PEDAL_ON_IDX]    = state;
+                        ret = CTRL1;
                         break;
                     case GATE:
                         ctrl_msg2[PEDAL_TYPE_IDX]  = _GATE;
                         ctrl_msg2[PEDAL_ON_IDX]    = state;
+                        ret = CTRL1;
                         break;
                     case REVERB:
                         ctrl_msg2[PEDAL_TYPE_IDX]  = _REVERB;
                         ctrl_msg2[PEDAL_ON_IDX]    = state;
+                        ret = CTRL1;
                         break;
                     case WAH:
                         ctrl_msg2[PEDAL_TYPE_IDX]  = _WAH;
                         ctrl_msg2[PEDAL_ON_IDX]    = state;
+                        ret = CTRL1;
                         break;
                     case BANK_UP:
-                        bank_msg1[BANK_UP_DOWN_IDX] = UP;
-
+                        bank_msg1[BANK_UP_DOWN_IDX] = state;
                         ret = BANK_UP1;
                         break;
                     case BANK_DOWN:
-                        bank_msg1[BANK_UP_DOWN_IDX] = DOWN;
-
+                        bank_msg1[BANK_UP_DOWN_IDX] = state;
                         ret = BANK_DOWN1;
                         break;
                     default:
@@ -458,12 +483,11 @@ static enum comm_state fbv3_process_commands(void)
                         break;
                 }
 
-                ret = true;
-                fprintf(stderr, "got command %d! effect 0x%x state %d\n", i, (int)effect, (int)state);
+                fprintf(stderr, "got command %d! effect 0x%x state %d comm %d\n", i, (int)effect, (int)state, (int)ret);
             }
             else
             {
-                ret = false;
+                ret = WAIT;
                 fprintf(stderr, "unknown effect type 0x%x", (int)effect);
             }
 
