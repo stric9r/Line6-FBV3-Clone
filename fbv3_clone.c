@@ -121,7 +121,7 @@ static uint8_t command_index = 0;     /// Used to loop through commands to proce
 static bool fpv_clone_ready = false;  /// Used to signal the pedal can take commands
 
 /*function Prototypes*/
-static comm_state fbv3_process_commands(void);
+static enum comm_state fbv3_process_commands(void);
 static void fbv3_print_msg_data(const uint8_t* data, const size_t size, const char * description);
 static void fbv3_print_usb_error(const int16_t error);
 
@@ -301,7 +301,7 @@ bool fbv3_process(void)
             buff_out = NULL;
             buff_out_sz = 0;
             
-            state = fbv3_process_commands() ? CTRL1 : WAIT; //on successful process, execute command
+            state = fbv3_process_commands();
             break;
         case CTRL1: //CTRL1 and CTRL2 only called when action needed
             buff_out = ctrl_msg1;
@@ -385,9 +385,9 @@ struct fbv3_state * fbv3_get_states(void)
 /// @brief Processes commands by putting them in the CTRL packet
 ///
 /// @return The comm state to go to next
-static comm_state fbv3_process_commands(void)
+static enum comm_state fbv3_process_commands(void)
 {
-    comm_state ret = CTRL1; //assume control, will change below if needed
+    enum comm_state ret = CTRL1; //assume control, will change below if needed
 
     //find first command, process, remove command,
     //then exit, next round gets next command

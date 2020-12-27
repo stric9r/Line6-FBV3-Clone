@@ -70,7 +70,8 @@ void setup_gpio()
     pinMode(GATE_PIN, INPUT);
     pinMode(REVERB_PIN, INPUT);
     pinMode(WAH_PIN, INPUT);
-    pinMode(BANK_PIN, INPUT);
+    pinMode(BANK_UP_PIN, INPUT);
+    //pinMode(BANK_DOWN_PIN, INPUT);
 }
 
 /// @brief Reads GPIO and issues effect commands to the FBV3 module
@@ -152,7 +153,7 @@ void gpio_to_fbv3_effect(void)
     }
 
     pin_state = digitalRead(BANK_UP_PIN);
-    if(pin_state != fbv3_states->bank_state)
+    if(pin_state != fbv3_states->bank_up_state)
     {
         fprintf(stderr, "bank up pin %d local %d\n", pin_state, fbv3_states->bank_up_state);
         
@@ -160,13 +161,13 @@ void gpio_to_fbv3_effect(void)
         fbv3_states->bank_up_state = pin_state;
     }
 
-    pin_state = digitalRead(BANK_DOWN_PIN);
-    if(pin_state != fbv3_states->bank_state)
+    /*pin_state = digitalRead(BANK_DOWN_PIN);
+    if(pin_state != fbv3_states->bank_down_state)
     {
         fprintf(stderr, "bank down pin %d local %d\n", pin_state, fbv3_states->bank_down_state);
         
         fbv3_update_effect_switch(BANK_UP, false); //state is forced false in fbv3 clone module
         fbv3_states->bank_down_state = pin_state;
-    }
+    }*/
 
 }
