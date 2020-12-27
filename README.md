@@ -27,7 +27,7 @@ Define file that holds all connection specific defines, array sizes, command val
 fbv3_startup.sh
 Script that can be called at startup.  It will check if FBV3 Clone is running, if not it'll start it.
 Used to keep the program running incase the USB times out or the USB cable is unplugged then plugged in.
-It's a crutch until there is a better way to handle the program exiting unexpectedly.
+It's a crutch until there is a better way to handle the program exiting unexpectedly.  It's hardcoded to look in /opt/fbv3_clone/ for fbv3 application.
 
 main.c
 The main entry of the code.  It combines the FBV3 clone module with wirePi to get I/O from the Raspberry Pi 4B.
