@@ -22,11 +22,11 @@
 #define REVERB_PIN     28 /*Pin 38*/
 #define WAH_PIN        29 /*Pin 40*/
 
-/*prototype*/
+/*prototypes*/
 void setup_gpio(void);
 void gpio_to_fbv3_effect(void);
 
-/// @breif Main program entry
+/// @brief Main program entry
 int main(int argc, char *argv[])
 {
     bool b_run = false;
