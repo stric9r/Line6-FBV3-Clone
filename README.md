@@ -5,7 +5,7 @@ This is still very much a work in progress.
 
 # Platform
 The hardware platform used is Raspberry Pi 4B (Linux 5.4.79-v7l+ armv7l)
-It using wiringPi and libUSB.  It's important to upgrad wiringPi to version 2.52 or higher for it to work.
+It using wiringPi and libUSB.  It's important to upgrade wiringPi to version 2.52 or higher for it to work.
 
 The platform can easily change, all platform specific code is in main.  
 
