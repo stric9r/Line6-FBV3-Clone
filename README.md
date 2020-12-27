@@ -4,8 +4,10 @@ It's current state only allows for authentication and simple ON/OFF commands.
 This is still very much a work in progress.
 
 # Platform
-The hardware platform used is Raspberry Pi 4B.  
+The hardware platform used is Raspberry Pi 4B (Linux 5.4.79-v7l+ armv7l)
 It using wiringPi.  It's important to upgrad wiringPi to version 2.52 or higher for it to work.
+
+The platform can easily change, all platform specific code is in main.  
 
 # Building using GCC
 gcc -o fbv3 main.c fbv3_clone.c -lwiringPi -lusb-1.0
