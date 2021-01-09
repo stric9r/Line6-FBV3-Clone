@@ -27,7 +27,7 @@
 /*prototypes*/
 void setup_gpio(void);
 bool gpio_to_fbv3_effect(bool latching);
-bool gpio_process(int pin, enum effects effect, int * state, bool latching);
+bool gpio_process(int pin, enum effects effect, int * p_state, bool latching);
 
 /// @brief Main program entry
 int main(int argc, char *argv[])
@@ -45,10 +45,10 @@ int main(int argc, char *argv[])
         if(fbv3_ready())
         {
           //poll the gpio and add to command queue
-          bool event_trigger = gpio_to_fbv3_effect(false);
+          bool b_event = gpio_to_fbv3_effect(false);
 
           // poor debounce
-          if(event_trigger)
+          if(b_event)
           {
               delay(50); //50 milliseconds
           }
@@ -97,22 +97,27 @@ void setup_gpio()
 
 /// @brief Handle GPIO presses 
 ///
+/// @param pin the physical pin as defined by wirePi interface
+/// @param effect the effect to update
+/// @param p_state  the current state of the effect 
+/// @param latching is the switch latching or momentary
+///
 /// @return True if an event happened
-bool gpio_process(int pin, enum effects effect, int * state, bool latching)
+bool gpio_process(int pin, enum effects effect, int * p_state, bool latching)
 {
     bool ret = false; 
     int pin_state = digitalRead(pin);
     
-    if(latching  && (pin_state != *state))
+    if(latching  && (pin_state != *p_state))
     {
-        *state = pin_state; //set,unset
-        fbv3_update_effect_switch(effect, (*state == HIGH) ? true:false); 
+        *p_state = pin_state; //set,unset
+        fbv3_update_effect_switch(effect, (*p_state == HIGH) ? true:false); 
         ret = true;
     }
     else if (!latching && (pin_state == HIGH)) //pedal pressed
     {
-        *state = (*state == HIGH) ? LOW:HIGH; //toggle
-        fbv3_update_effect_switch(effect, (*state == HIGH) ? true:false); 
+        *p_state = (*p_state == HIGH) ? LOW:HIGH; //toggle
+        fbv3_update_effect_switch(effect, (*p_state == HIGH) ? true:false); 
         ret = true;
     }
     else
@@ -129,19 +134,19 @@ bool gpio_process(int pin, enum effects effect, int * state, bool latching)
 bool gpio_to_fbv3_effect(bool latching)
 {
     bool ret = false;
-    struct fbv3_state * fbv3_states = fbv3_get_states();
+    struct fbv3_state * p_fbv3_states = fbv3_get_states();
 
-    ret |= gpio_process(DELAY_PIN, EFFECTS_DELAY, &fbv3_states->delay_state, latching);
-    ret |= gpio_process(MODULATION_PIN, EFFECTS_MODULATION, &fbv3_states->modulation_state, latching);
-    ret |= gpio_process(STOMP_PIN, EFFECTS_STOMP, &fbv3_states->stomp_state, latching);
-    ret |= gpio_process(VOLUME_PIN, EFFECTS_VOLUME, &fbv3_states->volume_state, latching);
-    ret |= gpio_process(COMPRESSOR_PIN, EFFECTS_COMPRESSOR, &fbv3_states->compressor_state, latching);
-    ret |= gpio_process(EQUALIZER_PIN, EFFECTS_EQUALIZER, &fbv3_states->equalizer_state, latching);
-    ret |= gpio_process(GATE_PIN, EFFECTS_GATE, &fbv3_states->gate_state, latching);
-    ret |= gpio_process(REVERB_PIN, EFFECTS_REVERB, &fbv3_states->reverb_state, latching);
-    ret |= gpio_process(WAH_PIN, EFFECTS_WAH, &fbv3_states->wah_state, latching);
-    ret |= gpio_process(BANK_UP_PIN, EFFECTS_BANK_UP, &fbv3_states->bank_up_state, latching);
-    ret |= gpio_process(BANK_DOWN_PIN, EFFECTS_BANK_DOWN, &fbv3_states->bank_down_state, latching);
+    ret |= gpio_process(DELAY_PIN, EFFECTS_DELAY, &p_fbv3_states->delay_state, latching);
+    ret |= gpio_process(MODULATION_PIN, EFFECTS_MODULATION, &p_fbv3_states->modulation_state, latching);
+    ret |= gpio_process(STOMP_PIN, EFFECTS_STOMP, &p_fbv3_states->stomp_state, latching);
+    ret |= gpio_process(VOLUME_PIN, EFFECTS_VOLUME, &p_fbv3_states->volume_state, latching);
+    ret |= gpio_process(COMPRESSOR_PIN, EFFECTS_COMPRESSOR, &p_fbv3_states->compressor_state, latching);
+    ret |= gpio_process(EQUALIZER_PIN, EFFECTS_EQUALIZER, &p_fbv3_states->equalizer_state, latching);
+    ret |= gpio_process(GATE_PIN, EFFECTS_GATE, &p_fbv3_states->gate_state, latching);
+    ret |= gpio_process(REVERB_PIN, EFFECTS_REVERB, &p_fbv3_states->reverb_state, latching);
+    ret |= gpio_process(WAH_PIN, EFFECTS_WAH, &p_fbv3_states->wah_state, latching);
+    ret |= gpio_process(BANK_UP_PIN, EFFECTS_BANK_UP, &p_fbv3_states->bank_up_state, latching);
+    ret |= gpio_process(BANK_DOWN_PIN, EFFECTS_BANK_DOWN, &p_fbv3_states->bank_down_state, latching);
 
     return ret;
 }
