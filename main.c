@@ -12,8 +12,8 @@
 
 /// Mapping to wPi from raspberry pi 4b pinout on header
 /// Mapping can be seen by running command "gpio readall"
-#define DELAY_PIN      23 /*Pin 11*/
-#define MODULATION_PIN 23 /*Pin 13*/
+#define DELAY_PIN       0 /*Pin 11*/
+#define MODULATION_PIN  2 /*Pin 13*/
 #define STOMP_PIN       3 /*Pin 15*/
 #define VOLUME_PIN     23 /*Pin 33*/
 #define COMPRESSOR_PIN 24 /*Pin 35*/
@@ -21,8 +21,8 @@
 #define GATE_PIN       27 /*Pin 36*/
 #define REVERB_PIN     28 /*Pin 38*/
 #define WAH_PIN        29 /*Pin 40*/
-#define BANK_UP_PIN     2 /*Pin ??*/
-#define BANK_DOWN_PIN   0 /*Pin ??*/
+#define BANK_UP_PIN     1 /*Pin 12*/
+#define BANK_DOWN_PIN   4 /*Pin 16*/
 
 /*prototypes*/
 void setup_gpio(void);
