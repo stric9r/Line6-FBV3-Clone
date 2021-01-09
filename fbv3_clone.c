@@ -14,15 +14,16 @@
 /// State machine states for commnication with L6 Spider V Amp
 enum comm_state
 {
-    CONNECT,    /// On first connection, only used once per session
-    AUTH1,      /// After first connection, authenicate 1 - 3, only used once per session
-    AUTH2,
-    AUTH3, 
-    WAIT,       /// Wait for action from IO
-    CTRL1,      /// Control hello msg sent before every control command
-    CTRL2,      /// Control command then back to wait state
-    BANK_UP1,   /// Bank up/down command then back to wait state
-    BANK_DOWN1,
+    COMM_STATE_CONNECT,    /// On first connection, only used once per session
+    COMM_STATE_AUTH1,      /// After first connection, authenicate 1 - 3, only used once per session
+    COMM_STATE_AUTH2,
+    COMM_STATE_AUTH3, 
+    COMM_STATE_WAIT,       /// Wait for action from IO
+    COMM_STATE_CTRL1,      /// Control hello msg sent before every control command
+    COMM_STATE_CTRL2,      /// Control command then back to wait state
+    COMM_STATE_BANK_UP1,   /// Bank up/down command then back to wait state
+    COMM_STATE_BANK_DOWN1,
+    COMM_STATE_BANK2,      /// Complete bank message
     COMM_STATE_MAX,
 };
 
@@ -113,6 +114,17 @@ static unsigned char bank_msg1[BANK_40_SZ] = {0x04, 0xF0, 0x00, 0x01,
                                               0x04, 0x00, 0x00, 0x00,
                                               0x06, 0x00, 0xF7, 0x00};
 
+static unsigned char bank_msg2[BANK_40_SZ] = {0x04, 0xF0, 0x00, 0x01,
+                                              0x04, 0x0C, 0x22, 0x00,
+                                              0x04, 0x4D, 0x00, 0x01,
+                                              0x04, 0x00, 0x00, 0x0B,
+                                              0x04, 0x00, 0x0B, 0x00,
+                                              0x04, 0x00, 0x00, 0x04,
+                                              0x04, 0x00, 0x00, 0x3C,
+                                              0x04, 0x00, 0x7F, 0x7F,
+                                              0x04, 0x7F, 0x7F, 0x00,
+                                              0x06, 0x00, 0xF7, 0x00};
+
 /*variables*/
 
 /// Used for usb enumeration / control
@@ -125,7 +137,7 @@ static uint8_t command_index = 0;     /// Used to loop through commands to proce
 static bool fpv_clone_ready = false;  /// Used to signal the pedal can take commands
 
 /*function Prototypes*/
-static comm_state fbv3_process_commands(void);
+static enum comm_state fbv3_process_commands(void);
 static void fbv3_print_msg_data(const uint8_t* data, const size_t size, const char * description);
 static void fbv3_print_usb_error(const int16_t error);
 
@@ -222,7 +234,7 @@ bool fbv3_ready(void)
 /// @return True on success
 bool fbv3_process(void) 
 {
-    static enum comm_state state = CONNECT;
+    static enum comm_state state = COMM_STATE_CONNECT;
     uint32_t bytes_rx_tx = 0;
     int16_t ret = LIBUSB_SUCCESS;
 
@@ -273,70 +285,76 @@ bool fbv3_process(void)
     int buff_out_sz = 0;
     switch(state)
     {
-        case CONNECT: //should only connect 1 time per session
+        case COMM_STATE_CONNECT: //should only connect 1 time per session
             buff_out = connect_msg;
             buff_out_sz = CONNECT_SZ;
             strcpy(description, "CONNECT MSG");
             
-            state = AUTH1;
+            state = COMM_STATE_AUTH1;
             break;
-        case AUTH1:
+        case COMM_STATE_AUTH1:
             buff_out = auth_msg1;
             buff_out_sz = AUTH_40_SZ;
             strcpy(description, "AUTH1 MSG");
             
-            state = AUTH2;
+            state = COMM_STATE_AUTH2;
             break;
-        case AUTH2:
+        case COMM_STATE_AUTH2:
             buff_out = auth_msg2;
             buff_out_sz = AUTH_40_SZ;
             strcpy(description, "AUTH2 MSG");
             
-            state = AUTH3;
+            state = COMM_STATE_AUTH3;
             break;
-        case AUTH3:
+        case COMM_STATE_AUTH3:
             buff_out = auth_msg3;
             buff_out_sz = AUTH_28_SZ;
             strcpy(description, "AUTH3 MSG");
 
-            state = WAIT; //after authentication, wait for commands
+            state = COMM_STATE_WAIT; //after authentication, wait for commands
             break;
-        case WAIT:
+        case COMM_STATE_WAIT:
             fpv_clone_ready = true; 
 
             buff_out = NULL;
             buff_out_sz = 0;
             
-            state = fbv3_process_commands() ? CTRL1 : WAIT; //on successful process, execute command
+            state = fbv3_process_commands();
             break;
-        case CTRL1: //CTRL1 and CTRL2 only called when action needed
+        case COMM_STATE_CTRL1: //CTRL1 and CTRL2 only called when action needed
             buff_out = ctrl_msg1;
             buff_out_sz = CTRL_40_SZ;
             strcpy(description, "CTRL1 MSG");
 
-            state = CTRL2;
+            state = COMM_STATE_CTRL2;
             break;
-        case CTRL2:
+        case COMM_STATE_CTRL2:
             buff_out = ctrl_msg2;
             buff_out_sz = CTRL_52_SZ;
             strcpy(description, "CTRL2 MSG");
 
-            state = WAIT; //force back into wait to process next message
+            state = COMM_STATE_WAIT; //force back into wait to process next message
             break;
-        case BANK_UP1:
+        case COMM_STATE_BANK_UP1:
             buff_out = bank_msg1;
             buff_out_sz = BANK_40_SZ;
             strcpy(description, "BANK_UP MSG");
 
-            state = WAIT; //force back into wait to process next message
+            state = COMM_STATE_BANK2;
             break;
-        case BANK_DOWN1:
+        case COMM_STATE_BANK_DOWN1:
             buff_out = bank_msg1;
             buff_out_sz = BANK_40_SZ;
             strcpy(description, "BANK_DOWN MSG");
 
-            state = WAIT; //force back into wait to process next message
+            state = COMM_STATE_BANK2;
             break;
+        case COMM_STATE_BANK2:
+          buff_out = bank_msg2;
+          buff_out_sz = BANK_40_SZ;
+          strcpy(description, "BANK2 MSG");
+          
+          state = COMM_STATE_WAIT; //force back into wait to process next message
         default:
             fpv_clone_ready = false;
             return LIBUSB_ERROR_OTHER;
@@ -446,9 +464,9 @@ struct fbv3_state * fbv3_get_states(void)
 /// @brief Processes commands by putting them in the CTRL packet
 ///
 /// @return The comm state to go to next
-static comm_state fbv3_process_commands(void)
+static enum comm_state fbv3_process_commands(void)
 {
-    comm_state ret = CTRL1; //assume control, will change below if needed
+    enum comm_state ret = COMM_STATE_WAIT;
 
     //find first command, process, remove command,
     //then exit, next round gets next command
@@ -473,51 +491,60 @@ static comm_state fbv3_process_commands(void)
                     case EFFECTS_MODULATION:
                         ctrl_msg2[PEDAL_TYPE_IDX]  = PEDAL_TYPE_MODULATION;
                         ctrl_msg2[PEDAL_ON_IDX]    = state;
+                        ret = COMM_STATE_CTRL1;
                         break;
                     case EFFECTS_DELAY:
                         ctrl_msg2[PEDAL_TYPE_IDX]  = PEDAL_TYPE_DELAY;
                         ctrl_msg2[PEDAL_ON_IDX]    = state;
+                        ret = COMM_STATE_CTRL1;
                         break;
                     case EFFECTS_STOMP:
                         ctrl_msg2[PEDAL_TYPE_IDX]  = PEDAL_TYPE_STOMP;
                         ctrl_msg2[PEDAL_ON_IDX]    = state;
+                        ret = COMM_STATE_CTRL1;
                         break;
                     case EFFECTS_VOLUME:
                         ctrl_msg2[PEDAL_TYPE_IDX]  = PEDAL_TYPE_VOLUME;
                         ctrl_msg2[PEDAL_ON_IDX]    = state;
+                        ret = COMM_STATE_CTRL1;
                         break;
                     case EFFECTS_COMPRESSOR:
                         ctrl_msg2[PEDAL_TYPE_IDX]  = PEDAL_TYPE_COMPRESSOR;
                         ctrl_msg2[PEDAL_ON_IDX]    = state;
+                        ret = COMM_STATE_CTRL1;
                         break;
                     case EFFECTS_EQUALIZER:
                         ctrl_msg2[PEDAL_TYPE_IDX]  = PEDAL_TYPE_EQUALIZER;
                         ctrl_msg2[PEDAL_ON_IDX]    = state;
+                        ret = COMM_STATE_CTRL1;
                         break;
                     case EFFECTS_GATE:
                         ctrl_msg2[PEDAL_TYPE_IDX]  = PEDAL_TYPE_GATE;
                         ctrl_msg2[PEDAL_ON_IDX]    = state;
+                        ret = COMM_STATE_CTRL1;
                         break;
                     case EFFECTS_REVERB:
                         ctrl_msg2[PEDAL_TYPE_IDX]  = PEDAL_TYPE_REVERB;
                         ctrl_msg2[PEDAL_ON_IDX]    = state;
+                        ret = COMM_STATE_CTRL1;
                         break;
                     case EFFECTS_WAH:
                         ctrl_msg2[PEDAL_TYPE_IDX]  = PEDAL_TYPE_WAH;
                         ctrl_msg2[PEDAL_ON_IDX]    = state;
+                        ret = COMM_STATE_CTRL1;
                         break;
                     case EFFECTS_BANK_UP:
                         bank_msg1[BANK_UP_DOWN_IDX] = preset;
 
-                        ret = BANK_UP1;
+                        ret = COMM_STATE_BANK_UP1;
                         break;
                     case EFFECTS_BANK_DOWN:
                         bank_msg1[BANK_UP_DOWN_IDX] = preset;
 
-                        ret = BANK_DOWN1;
+                        ret = COMM_STATE_BANK_DOWN1;
                         break;
                     default:
-                        ret = WAIT;
+                        ret = COMM_STATE_WAIT;
                         break;
                 }
 
@@ -525,7 +552,7 @@ static comm_state fbv3_process_commands(void)
             }
             else
             {
-                ret = WAIT;
+                ret = COMM_STATE_WAIT;
                 fprintf(stderr, "unknown effect type 0x%x", (int)effect);
             }
 

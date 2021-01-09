@@ -13,7 +13,7 @@
 /// Mapping to wPi from raspberry pi 4b pinout on header
 /// Mapping can be seen by running command "gpio readall"
 #define DELAY_PIN       0 /*Pin 11*/
-#define MODULATION_PIN  0 /*Pin 13*/
+#define MODULATION_PIN  2 /*Pin 13*/
 #define STOMP_PIN       3 /*Pin 15*/
 #define VOLUME_PIN     23 /*Pin 33*/
 #define COMPRESSOR_PIN 24 /*Pin 35*/
