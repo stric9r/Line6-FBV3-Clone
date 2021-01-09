@@ -127,6 +127,23 @@ static unsigned char bank_msg2[BANK_40_SZ] = {0x04, 0xF0, 0x00, 0x01,
 
 /*variables*/
 
+/// Used for printts,  lines up with enum effects
+static char const * const effects_strings[EFFECTS_MAX] = 
+{
+  "NONE",
+  "MODULATION",
+  "DELAY",
+  "STOMP",
+  "VOLUME",
+  "COMPRESSOR",
+  "EQUALIZER",
+  "GATE",
+  "REVERB",
+  "WAH",
+  "BANK_UP",
+  "BANK_DOWN",
+};
+
 /// Used for usb enumeration / control
 static libusb_device **p_list;
 static libusb_device_handle *p_handle = NULL;
@@ -394,7 +411,7 @@ void fbv3_update_effect_switch(enum effects effect, /// effect to add
 {
     if( effect != EFFECTS_BANK_UP && effect != EFFECTS_BANK_DOWN)
     {
-        fprintf(stderr, "adding command effect 0x%x state %d\n", (int)effect, (int)on_off);
+        fprintf(stderr, "adding command effect %s state %d\n", effects_strings[effect], (int)on_off);
 
         commands_to_process[command_index].effect = effect;
         commands_to_process[command_index].on_off = on_off;
@@ -452,7 +469,7 @@ void fbv3_decrement_preset(void)
 
     command_index = (command_index + 1) % CMD_MAX_SZ; //next index number
 
-    fprintf(stderr, "incrementing preset to %d\n", preset_num_store);
+    fprintf(stderr, "decrementing preset to %d\n", preset_num_store);
 }
 
 /// @breif Gets the structure that holds the current state of each effect pedal
@@ -548,7 +565,7 @@ static enum comm_state fbv3_process_commands(void)
                         break;
                 }
 
-                fprintf(stderr, "got command %d! effect 0x%x state %d, preset %d \n", i, (int)effect, (int)state, preset);
+                fprintf(stderr, "got command %d! effect %s state %d, preset %d \n", i, effects_strings[effect], (int)state, preset);
             }
             else
             {
