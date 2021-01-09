@@ -17,32 +17,38 @@
 #define CONNECT_SZ 8
 #define AUTH_40_SZ 40
 #define AUTH_28_SZ 28
-#define HELLO_SZ   40
-#define CTRL_SZ    52
-#define MAX_IN_SZ     64
+#define CTRL_40_SZ 40
+#define CTRL_52_SZ 52
+#define BANK_40_SZ 40
+#define MAX_IN_SZ  64
 
 /// Index locations in packets
-#define PACKET_NUM_IDX 11
-#define PEDAL_TYPE_IDX 23
-#define PEDAL_ON_IDX   35
+#define PACKET_NUM_IDX   11
+#define PEDAL_TYPE_IDX   23
+#define PEDAL_ON_IDX     35
+#define BANK_UP_DOWN_IDX 30
 
 /// Pedal types, assigned at index PEDAL_TYPE_IDX
-#define _DELAY      0x46
-#define _MODULATION 0x47
-#define _STOMP      0x48
-#define _VOLUME     0x49
-#define _COMPRESSOR 0x4A
-#define _EQUALIZER  0x4B
-#define _UNKNOWN_1  0x4C
-#define _GATE       0x4D
-#define _UNKNOWN_2  0x4E
-#define _UNKNOWN_3  0x4F
-#define _REVERB     0x50
-#define _WAH        0x51
+#define PEDAL_TYPE_DELAY      0x46
+#define PEDAL_TYPE_MODULATION 0x47
+#define PEDAL_TYPE_STOMP      0x48
+#define PEDAL_TYPE_VOLUME     0x49
+#define PEDAL_TYPE_COMPRESSOR 0x4A
+#define PEDAL_TYPE_EQUALIZER  0x4B
+#define PEDAL_TYPE_UNKNOWN_1  0x4C
+#define PEDAL_TYPE_GATE       0x4D
+#define PEDAL_TYPE_UNKNOWN_2  0x4E
+#define PEDAL_TYPE_UNKNOWN_3  0x4F
+#define PEDAL_TYPE_REVERB     0x50
+#define PEDAL_TYPE_WAH        0x51
 
 /// On off codes, assigned at index PEDAL_ON_IDX
-#define ON  1
-#define OFF 0
+#define PEDAL_ON  1
+#define PEDAL_OFF 0
+
+/// Max min preset number 
+#define PRESET_START 0x00
+#define PRESET_END 0x7E
 
 /// Command array size 
 #define CMD_MAX_SZ 10

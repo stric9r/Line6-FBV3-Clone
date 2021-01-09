@@ -14,13 +14,16 @@
 /// State machine states for commnication with L6 Spider V Amp
 enum comm_state
 {
-    CONNECT, /// On first connection, only used once per session
-    AUTH1,   /// After first connection, authenicate 1 - 3, only used once per session
-    AUTH2,
-    AUTH3, 
-    WAIT,    /// Wait for action from IO
-    HELLO,   /// Hello msg sent before every control command
-    CONTROL, /// Control command then back to wait state
+    COMM_STATE_CONNECT,    /// On first connection, only used once per session
+    COMM_STATE_AUTH1,      /// After first connection, authenicate 1 - 3, only used once per session
+    COMM_STATE_AUTH2,
+    COMM_STATE_AUTH3, 
+    COMM_STATE_WAIT,       /// Wait for action from IO
+    COMM_STATE_CTRL1,      /// Control hello msg sent before every control command
+    COMM_STATE_CTRL2,      /// Control command then back to wait state
+    COMM_STATE_BANK_UP1,   /// Bank up/down command then back to wait state
+    COMM_STATE_BANK_DOWN1,
+    COMM_STATE_BANK2,      /// Complete bank message
     COMM_STATE_MAX,
 };
 
@@ -29,14 +32,18 @@ struct command
 {
     enum effects effect;
     bool on_off;
+    int8_t preset_num;
 };
+
+// Preset number used to iterate through presets with bank command (up or down)
+static int8_t preset_num_store = 0;
 
 /*global arrays*/
 static struct command commands_to_process[CMD_MAX_SZ]; /// Storage for commands set by user input
 
 
 // note: Data in these arrays were populated using observations from wireshark usb tracing.
-// this program augments certain indexes to create new commands.  See "PedalNotes.xlsx"
+// this program augments certain indexes to create new commands.  See "Line6_Spider_V_USB_Protocol.xlsx"
 static unsigned char connect_msg[CONNECT_SZ] = {0x04, 0xf0, 0x7e, 0x7f, 0x07, 0x06, 0x01, 0xf7};
 
 static unsigned char auth_msg1[AUTH_40_SZ] = {0x04, 0xF0, 0x00, 0x01, 
@@ -71,32 +78,71 @@ static unsigned char auth_msg3[AUTH_28_SZ] = {0x04, 0xF0, 0x00, 0x01,
                                               0x04, 0x6A, 0x50, 0x00,
                                               0x07, 0x00, 0x00, 0xF7};                                
                                
-static unsigned char hello_msg[HELLO_SZ] = {0x04, 0xf0, 0x00, 0x01, 
-                                            0x04, 0x0c, 0x22, 0x00, 
-                                            0x04, 0x4d, 0x00, 0x00, 
-                                            0x04, 0x00, 0x00, 0x07, 
-                                            0x04, 0x00, 0x0a, 0x00, 
-                                            0x04, 0x00, 0x00, 0x10, 
-                                            0x04, 0x00, 0x00, 0x00, 
-                                            0x04, 0x00, 0x00, 0x00, 
-                                            0x04, 0x00, 0x00, 0x00, 
-                                            0x06, 0x00, 0xf7, 0x00};
+static unsigned char ctrl_msg1[CTRL_40_SZ] = {0x04, 0xf0, 0x00, 0x01, 
+                                              0x04, 0x0c, 0x22, 0x00, 
+                                              0x04, 0x4d, 0x00, 0x00, 
+                                              0x04, 0x00, 0x00, 0x07, 
+                                              0x04, 0x00, 0x0a, 0x00, 
+                                              0x04, 0x00, 0x00, 0x10, 
+                                              0x04, 0x00, 0x00, 0x00, 
+                                              0x04, 0x00, 0x00, 0x00, 
+                                              0x04, 0x00, 0x00, 0x00, 
+                                              0x06, 0x00, 0xf7, 0x00};
                            
-static unsigned char ctrl_msg [CTRL_SZ] = {0x04, 0xf0, 0x00, 0x01, 
-                                          0x04, 0x0c, 0x22, 0x00, 
-                                          0x04, 0x4d, 0x00, 0x01, 
-                                          0x04, 0x00, 0x00, 0x0f, 
-                                          0x04, 0x00, 0x74, 0x03,
-                                          0x04, 0x00, 0x00, 0x47, 
-                                          0x04, 0x03, 0x00, 0x00, 
-                                          0x04, 0x00, 0x03, 0x00, 
-                                          0x04, 0x00, 0x00, 0x01, 
-                                          0x04, 0x00, 0x00, 0x00, 
-                                          0x04, 0x00, 0x00, 0x00, 
-                                          0x04, 0x00, 0x00, 0x00, 
-                                          0x05, 0xf7, 0x00, 0x00};
+static unsigned char ctrl_msg2 [CTRL_52_SZ] = {0x04, 0xf0, 0x00, 0x01, 
+                                               0x04, 0x0c, 0x22, 0x00, 
+                                               0x04, 0x4d, 0x00, 0x01, 
+                                               0x04, 0x00, 0x00, 0x0f, 
+                                               0x04, 0x00, 0x74, 0x03,
+                                               0x04, 0x00, 0x00, 0x47, 
+                                               0x04, 0x03, 0x00, 0x00, 
+                                               0x04, 0x00, 0x03, 0x00, 
+                                               0x04, 0x00, 0x00, 0x01, 
+                                               0x04, 0x00, 0x00, 0x00, 
+                                               0x04, 0x00, 0x00, 0x00, 
+                                               0x04, 0x00, 0x00, 0x00, 
+                                               0x05, 0xf7, 0x00, 0x00};
+
+static unsigned char bank_msg1[BANK_40_SZ] = {0x04, 0xF0, 0x00, 0x01,
+                                              0x04, 0x0C, 0x22, 0x00,
+                                              0x04, 0x4D, 0x01, 0x00,
+                                              0x04, 0x00, 0x00, 0x0B,
+                                              0x04, 0x00, 0x0D, 0x00,
+                                              0x04, 0x00, 0x00, 0x04,
+                                              0x04, 0x00, 0x00, 0x00,
+                                              0x04, 0x00, 0x00, 0x00,
+                                              0x04, 0x00, 0x00, 0x00,
+                                              0x06, 0x00, 0xF7, 0x00};
+
+static unsigned char bank_msg2[BANK_40_SZ] = {0x04, 0xF0, 0x00, 0x01,
+                                              0x04, 0x0C, 0x22, 0x00,
+                                              0x04, 0x4D, 0x01, 0x01,
+                                              0x04, 0x00, 0x00, 0x0B,
+                                              0x04, 0x00, 0x0B, 0x00,
+                                              0x04, 0x00, 0x00, 0x04,
+                                              0x04, 0x00, 0x00, 0x3C,
+                                              0x04, 0x00, 0x7F, 0x7F,
+                                              0x04, 0x7F, 0x7F, 0x00,
+                                              0x06, 0x00, 0xF7, 0x00};
 
 /*variables*/
+
+/// Used for printts,  lines up with enum effects
+static char const * const effects_strings[EFFECTS_MAX] = 
+{
+  "NONE",
+  "MODULATION",
+  "DELAY",
+  "STOMP",
+  "VOLUME",
+  "COMPRESSOR",
+  "EQUALIZER",
+  "GATE",
+  "REVERB",
+  "WAH",
+  "BANK_UP",
+  "BANK_DOWN",
+};
 
 /// Used for usb enumeration / control
 static libusb_device **p_list;
@@ -108,10 +154,9 @@ static uint8_t command_index = 0;     /// Used to loop through commands to proce
 static bool fpv_clone_ready = false;  /// Used to signal the pedal can take commands
 
 /*function Prototypes*/
-static bool fbv3_process_commands(void);
+static enum comm_state fbv3_process_commands(void);
 static void fbv3_print_msg_data(const uint8_t* data, const size_t size, const char * description);
 static void fbv3_print_usb_error(const int16_t error);
-
 
 /// @brief Initialize the fbv3 interface over USB.
 ///        This handles enumeration, configuration, and kernal detatchment.
@@ -119,6 +164,9 @@ static void fbv3_print_usb_error(const int16_t error);
 ///@return True on success
 bool fbv3_init(void)
 {
+    // todo, store last used preset in file and read it in on init
+    preset_num_store = 0; //initialize to first preset
+
     int16_t status = LIBUSB_ERROR_OTHER; 
 
     //clear the command array
@@ -203,7 +251,7 @@ bool fbv3_ready(void)
 /// @return True on success
 bool fbv3_process(void) 
 {
-    static enum comm_state state = CONNECT;
+    static enum comm_state state = COMM_STATE_CONNECT;
     uint32_t bytes_rx_tx = 0;
     int16_t ret = LIBUSB_SUCCESS;
 
@@ -213,10 +261,10 @@ bool fbv3_process(void)
         return LIBUSB_ERROR_OTHER;
     }
 
-    //setup hello message and control message
+    //setup control messages
     //hard coded in arrays, just here to be explicit
-    //hello_msg[PACKET_NUM_IDX] = 0;  //first msg
-    //ctrl_msg[PACKET_NUM_IDX]  = 1;  //second msg
+    //ctrl_msg1[PACKET_NUM_IDX] = 0;  //first msg
+    //ctrl_msg2[PACKET_NUM_IDX] = 1;  //second msg
 
     //populate tranfer structure
     //on connect message
@@ -254,56 +302,76 @@ bool fbv3_process(void)
     int buff_out_sz = 0;
     switch(state)
     {
-        case CONNECT: //should only connect 1 time per session
+        case COMM_STATE_CONNECT: //should only connect 1 time per session
             buff_out = connect_msg;
             buff_out_sz = CONNECT_SZ;
             strcpy(description, "CONNECT MSG");
             
-            state = AUTH1;
+            state = COMM_STATE_AUTH1;
             break;
-        case AUTH1:
+        case COMM_STATE_AUTH1:
             buff_out = auth_msg1;
             buff_out_sz = AUTH_40_SZ;
             strcpy(description, "AUTH1 MSG");
             
-            state = AUTH2;
+            state = COMM_STATE_AUTH2;
             break;
-        case AUTH2:
+        case COMM_STATE_AUTH2:
             buff_out = auth_msg2;
             buff_out_sz = AUTH_40_SZ;
             strcpy(description, "AUTH2 MSG");
             
-            state = AUTH3;
+            state = COMM_STATE_AUTH3;
             break;
-        case AUTH3:
+        case COMM_STATE_AUTH3:
             buff_out = auth_msg3;
             buff_out_sz = AUTH_28_SZ;
             strcpy(description, "AUTH3 MSG");
 
-            state = WAIT; //after authentication, wait for commands
+            state = COMM_STATE_WAIT; //after authentication, wait for commands
             break;
-        case WAIT:
+        case COMM_STATE_WAIT:
             fpv_clone_ready = true; 
 
             buff_out = NULL;
             buff_out_sz = 0;
             
-            state = fbv3_process_commands() ? HELLO : WAIT; //on successful process, execute command
+            state = fbv3_process_commands();
             break;
-        case HELLO: //HELLO and CONTROL only called when action needed
-            buff_out = hello_msg;
-            buff_out_sz = HELLO_SZ;
-            strcpy(description, "HELLO MSG");
+        case COMM_STATE_CTRL1: //CTRL1 and CTRL2 only called when action needed
+            buff_out = ctrl_msg1;
+            buff_out_sz = CTRL_40_SZ;
+            strcpy(description, "CTRL1 MSG");
 
-            state = CONTROL;
+            state = COMM_STATE_CTRL2;
             break;
-        case CONTROL:
-            buff_out = ctrl_msg;
-            buff_out_sz = CTRL_SZ;
-            strcpy(description, "CONTROL MSG");
+        case COMM_STATE_CTRL2:
+            buff_out = ctrl_msg2;
+            buff_out_sz = CTRL_52_SZ;
+            strcpy(description, "CTRL2 MSG");
 
-            state = WAIT; //force back into wait to process next message
+            state = COMM_STATE_WAIT; //force back into wait to process next message
             break;
+        case COMM_STATE_BANK_UP1:
+            buff_out = bank_msg1;
+            buff_out_sz = BANK_40_SZ;
+            strcpy(description, "BANK_UP MSG");
+
+            state = COMM_STATE_BANK2;
+            break;
+        case COMM_STATE_BANK_DOWN1:
+            buff_out = bank_msg1;
+            buff_out_sz = BANK_40_SZ;
+            strcpy(description, "BANK_DOWN MSG");
+
+            state = COMM_STATE_BANK2;
+            break;
+        case COMM_STATE_BANK2:
+          buff_out = bank_msg2;
+          buff_out_sz = BANK_40_SZ;
+          strcpy(description, "BANK2 MSG");
+          
+          state = COMM_STATE_WAIT; //force back into wait to process next message
         default:
             fpv_clone_ready = false;
             return LIBUSB_ERROR_OTHER;
@@ -341,12 +409,67 @@ bool fbv3_process(void)
 void fbv3_update_effect_switch(enum effects effect, /// effect to add 
                                bool on_off)         /// effect on/off state
 {
-    fprintf(stderr, "adding command effect 0x%x state %d\n", (int)effect, (int)on_off);
-    
-    commands_to_process[command_index].effect = effect;
-    commands_to_process[command_index].on_off = on_off;
+    if( effect != EFFECTS_BANK_UP && effect != EFFECTS_BANK_DOWN)
+    {
+        fprintf(stderr, "adding command effect %s state %d\n", effects_strings[effect], (int)on_off);
 
-    command_index = (command_index + 1) % CMD_MAX_SZ;
+        commands_to_process[command_index].effect = effect;
+        commands_to_process[command_index].on_off = on_off;
+        commands_to_process[command_index].preset_num = 0; //don't care
+
+        command_index = (command_index + 1) % CMD_MAX_SZ;
+    }
+    else
+    {
+        if(effect == EFFECTS_BANK_UP)
+        {
+            fbv3_increment_preset(); //will increment command index
+        }
+        else
+        {
+            fbv3_decrement_preset(); //will increment command index
+        }
+        
+    }
+    
+}
+
+/// @brief Adds command to increment to next preset
+void fbv3_increment_preset(void)
+{
+    //increment preset number
+    preset_num_store++;
+    if(preset_num_store > PRESET_END)
+    {
+        preset_num_store = PRESET_START; //roll over
+    }
+
+    commands_to_process[command_index].effect = EFFECTS_BANK_UP;
+    commands_to_process[command_index].on_off = false; //dont care
+    commands_to_process[command_index].preset_num = preset_num_store;
+
+    command_index = (command_index + 1) % CMD_MAX_SZ; //next index number
+
+    fprintf(stderr, "incrementing preset to %d\n", preset_num_store);
+}
+
+/// @brief Adds command to decrement to next preset
+void fbv3_decrement_preset(void)
+{
+    //decrement preset number
+    preset_num_store--;
+    if(preset_num_store < PRESET_START)
+    {
+        preset_num_store = PRESET_END; //roll over
+    }
+
+    commands_to_process[command_index].effect = EFFECTS_BANK_DOWN;
+    commands_to_process[command_index].on_off = false; //dont care
+    commands_to_process[command_index].preset_num = preset_num_store;
+
+    command_index = (command_index + 1) % CMD_MAX_SZ; //next index number
+
+    fprintf(stderr, "decrementing preset to %d\n", preset_num_store);
 }
 
 /// @breif Gets the structure that holds the current state of each effect pedal
@@ -357,75 +480,96 @@ struct fbv3_state * fbv3_get_states(void)
 
 /// @brief Processes commands by putting them in the CTRL packet
 ///
-/// @return True if command found and added to CTRL packet
-static bool fbv3_process_commands(void)
+/// @return The comm state to go to next
+static enum comm_state fbv3_process_commands(void)
 {
-    bool ret = false;
+    enum comm_state ret = COMM_STATE_WAIT;
 
     //find first command, process, remove command,
     //then exit, next round gets next command
     for(int i = 0; i < CMD_MAX_SZ; i++)
     {
         //found something to process
-        if(commands_to_process[i].effect != NO_EFFECT)
+        if(commands_to_process[i].effect != EFFECTS_NONE)
         {
             char effect = commands_to_process[i].effect;
-            char state = commands_to_process[i].on_off ? ON : OFF;
+            char state = commands_to_process[i].on_off ? PEDAL_ON : PEDAL_OFF;
+            char preset = commands_to_process[i].preset_num;
             
             //clear commmand
-            commands_to_process[i].effect = NO_EFFECT;
+            commands_to_process[i].effect = EFFECTS_NONE;
             commands_to_process[i].on_off = false;
-            
-            if((NO_EFFECT < effect) && (EFFECTS_MAX > effect))
+            commands_to_process[i].preset_num = 0;
+
+            if((EFFECTS_NONE < effect) && (EFFECTS_MAX > effect))
             {
                 switch(effect)
                 {
-                    case MODULATION:
-                        ctrl_msg[PEDAL_TYPE_IDX]  = _MODULATION;
-                        ctrl_msg[PEDAL_ON_IDX]    = state;
+                    case EFFECTS_MODULATION:
+                        ctrl_msg2[PEDAL_TYPE_IDX]  = PEDAL_TYPE_MODULATION;
+                        ctrl_msg2[PEDAL_ON_IDX]    = state;
+                        ret = COMM_STATE_CTRL1;
                         break;
-                    case DELAY:
-                        ctrl_msg[PEDAL_TYPE_IDX]  = _DELAY;
-                        ctrl_msg[PEDAL_ON_IDX]    = state;
+                    case EFFECTS_DELAY:
+                        ctrl_msg2[PEDAL_TYPE_IDX]  = PEDAL_TYPE_DELAY;
+                        ctrl_msg2[PEDAL_ON_IDX]    = state;
+                        ret = COMM_STATE_CTRL1;
                         break;
-                    case STOMP:
-                        ctrl_msg[PEDAL_TYPE_IDX]  = _STOMP;
-                        ctrl_msg[PEDAL_ON_IDX]    = state;
+                    case EFFECTS_STOMP:
+                        ctrl_msg2[PEDAL_TYPE_IDX]  = PEDAL_TYPE_STOMP;
+                        ctrl_msg2[PEDAL_ON_IDX]    = state;
+                        ret = COMM_STATE_CTRL1;
                         break;
-                    case VOLUME:
-                        ctrl_msg[PEDAL_TYPE_IDX]  = _VOLUME;
-                        ctrl_msg[PEDAL_ON_IDX]    = state;
+                    case EFFECTS_VOLUME:
+                        ctrl_msg2[PEDAL_TYPE_IDX]  = PEDAL_TYPE_VOLUME;
+                        ctrl_msg2[PEDAL_ON_IDX]    = state;
+                        ret = COMM_STATE_CTRL1;
                         break;
-                    case COMPRESSOR:
-                        ctrl_msg[PEDAL_TYPE_IDX]  = _COMPRESSOR;
-                        ctrl_msg[PEDAL_ON_IDX]    = state;
+                    case EFFECTS_COMPRESSOR:
+                        ctrl_msg2[PEDAL_TYPE_IDX]  = PEDAL_TYPE_COMPRESSOR;
+                        ctrl_msg2[PEDAL_ON_IDX]    = state;
+                        ret = COMM_STATE_CTRL1;
                         break;
-                    case EQUALIZER:
-                        ctrl_msg[PEDAL_TYPE_IDX]  = _EQUALIZER;
-                        ctrl_msg[PEDAL_ON_IDX]    = state;
+                    case EFFECTS_EQUALIZER:
+                        ctrl_msg2[PEDAL_TYPE_IDX]  = PEDAL_TYPE_EQUALIZER;
+                        ctrl_msg2[PEDAL_ON_IDX]    = state;
+                        ret = COMM_STATE_CTRL1;
                         break;
-                    case GATE:
-                        ctrl_msg[PEDAL_TYPE_IDX]  = _GATE;
-                        ctrl_msg[PEDAL_ON_IDX]    = state;
+                    case EFFECTS_GATE:
+                        ctrl_msg2[PEDAL_TYPE_IDX]  = PEDAL_TYPE_GATE;
+                        ctrl_msg2[PEDAL_ON_IDX]    = state;
+                        ret = COMM_STATE_CTRL1;
                         break;
-                    case REVERB:
-                        ctrl_msg[PEDAL_TYPE_IDX]  = _REVERB;
-                        ctrl_msg[PEDAL_ON_IDX]    = state;
+                    case EFFECTS_REVERB:
+                        ctrl_msg2[PEDAL_TYPE_IDX]  = PEDAL_TYPE_REVERB;
+                        ctrl_msg2[PEDAL_ON_IDX]    = state;
+                        ret = COMM_STATE_CTRL1;
                         break;
-                    case WAH:
-                        ctrl_msg[PEDAL_TYPE_IDX]  = _WAH;
-                        ctrl_msg[PEDAL_ON_IDX]    = state;
+                    case EFFECTS_WAH:
+                        ctrl_msg2[PEDAL_TYPE_IDX]  = PEDAL_TYPE_WAH;
+                        ctrl_msg2[PEDAL_ON_IDX]    = state;
+                        ret = COMM_STATE_CTRL1;
+                        break;
+                    case EFFECTS_BANK_UP:
+                        bank_msg1[BANK_UP_DOWN_IDX] = preset;
+
+                        ret = COMM_STATE_BANK_UP1;
+                        break;
+                    case EFFECTS_BANK_DOWN:
+                        bank_msg1[BANK_UP_DOWN_IDX] = preset;
+
+                        ret = COMM_STATE_BANK_DOWN1;
                         break;
                     default:
+                        ret = COMM_STATE_WAIT;
                         break;
                 }
 
-                ret = true;
-                fprintf(stderr, "got command %d! effect 0x%x state %d\n", i, (int)effect, (int)state);
+                fprintf(stderr, "got command %d! effect %s state %d, preset %d \n", i, effects_strings[effect], (int)state, preset);
             }
             else
             {
-                ret = false;
+                ret = COMM_STATE_WAIT;
                 fprintf(stderr, "unknown effect type 0x%x", (int)effect);
             }
 
