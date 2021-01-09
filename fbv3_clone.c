@@ -31,7 +31,11 @@ struct command
 {
     enum effects effect;
     bool on_off;
+    int8_t preset_num;
 };
+
+// Preset number used to iterate through presets with bank command (up or down)
+static int8_t preset_num_store = 0;
 
 /*global arrays*/
 static struct command commands_to_process[CMD_MAX_SZ]; /// Storage for commands set by user input
@@ -105,7 +109,7 @@ static unsigned char bank_msg1[BANK_40_SZ] = {0x04, 0xF0, 0x00, 0x01,
                                               0x04, 0x00, 0x0D, 0x00,
                                               0x04, 0x00, 0x00, 0x04,
                                               0x04, 0x00, 0x00, 0x00,
-                                              0x04, 0x00, 0x01, 0x00,
+                                              0x04, 0x00, 0x00, 0x00,
                                               0x04, 0x00, 0x00, 0x00,
                                               0x06, 0x00, 0xF7, 0x00};
 
@@ -125,13 +129,15 @@ static comm_state fbv3_process_commands(void);
 static void fbv3_print_msg_data(const uint8_t* data, const size_t size, const char * description);
 static void fbv3_print_usb_error(const int16_t error);
 
-
 /// @brief Initialize the fbv3 interface over USB.
 ///        This handles enumeration, configuration, and kernal detatchment.
 ///
 ///@return True on success
 bool fbv3_init(void)
 {
+    // todo, store last used preset in file and read it in on init
+    preset_num_store = 0; //initialize to first preset
+
     int16_t status = LIBUSB_ERROR_OTHER; 
 
     //clear the command array
@@ -317,14 +323,14 @@ bool fbv3_process(void)
 
             state = WAIT; //force back into wait to process next message
             break;
-        case BANK_UP:
+        case BANK_UP1:
             buff_out = bank_msg1;
             buff_out_sz = BANK_40_SZ;
             strcpy(description, "BANK_UP MSG");
 
             state = WAIT; //force back into wait to process next message
             break;
-        case BANK_DOWN:
+        case BANK_DOWN1:
             buff_out = bank_msg1;
             buff_out_sz = BANK_40_SZ;
             strcpy(description, "BANK_DOWN MSG");
@@ -368,12 +374,67 @@ bool fbv3_process(void)
 void fbv3_update_effect_switch(enum effects effect, /// effect to add 
                                bool on_off)         /// effect on/off state
 {
-    fprintf(stderr, "adding command effect 0x%x state %d\n", (int)effect, (int)on_off);
-    
-    commands_to_process[command_index].effect = effect;
-    commands_to_process[command_index].on_off = on_off;
+    if( effect != EFFECTS_BANK_UP && effect != EFFECTS_BANK_DOWN)
+    {
+        fprintf(stderr, "adding command effect 0x%x state %d\n", (int)effect, (int)on_off);
 
-    command_index = (command_index + 1) % CMD_MAX_SZ;
+        commands_to_process[command_index].effect = effect;
+        commands_to_process[command_index].on_off = on_off;
+        commands_to_process[command_index].preset_num = 0; //don't care
+
+        command_index = (command_index + 1) % CMD_MAX_SZ;
+    }
+    else
+    {
+        if(effect == EFFECTS_BANK_UP)
+        {
+            fbv3_increment_preset(); //will increment command index
+        }
+        else
+        {
+            fbv3_decrement_preset(); //will increment command index
+        }
+        
+    }
+    
+}
+
+/// @brief Adds command to increment to next preset
+void fbv3_increment_preset(void)
+{
+    //increment preset number
+    preset_num_store++;
+    if(preset_num_store > PRESET_END)
+    {
+        preset_num_store = PRESET_START; //roll over
+    }
+
+    commands_to_process[command_index].effect = EFFECTS_BANK_UP;
+    commands_to_process[command_index].on_off = false; //dont care
+    commands_to_process[command_index].preset_num = preset_num_store;
+
+    command_index = (command_index + 1) % CMD_MAX_SZ; //next index number
+
+    fprintf(stderr, "incrementing preset to %d\n", preset_num_store);
+}
+
+/// @brief Adds command to decrement to next preset
+void fbv3_decrement_preset(void)
+{
+    //decrement preset number
+    preset_num_store--;
+    if(preset_num_store < PRESET_START)
+    {
+        preset_num_store = PRESET_END; //roll over
+    }
+
+    commands_to_process[command_index].effect = EFFECTS_BANK_DOWN;
+    commands_to_process[command_index].on_off = false; //dont care
+    commands_to_process[command_index].preset_num = preset_num_store;
+
+    command_index = (command_index + 1) % CMD_MAX_SZ; //next index number
+
+    fprintf(stderr, "incrementing preset to %d\n", preset_num_store);
 }
 
 /// @breif Gets the structure that holds the current state of each effect pedal
@@ -394,62 +455,64 @@ static comm_state fbv3_process_commands(void)
     for(int i = 0; i < CMD_MAX_SZ; i++)
     {
         //found something to process
-        if(commands_to_process[i].effect != NO_EFFECT)
+        if(commands_to_process[i].effect != EFFECTS_NONE)
         {
             char effect = commands_to_process[i].effect;
-            char state = commands_to_process[i].on_off ? ON : OFF;
+            char state = commands_to_process[i].on_off ? PEDAL_ON : PEDAL_OFF;
+            char preset = commands_to_process[i].preset_num;
             
             //clear commmand
-            commands_to_process[i].effect = NO_EFFECT;
+            commands_to_process[i].effect = EFFECTS_NONE;
             commands_to_process[i].on_off = false;
-            
-            if((NO_EFFECT < effect) && (EFFECTS_MAX > effect))
+            commands_to_process[i].preset_num = 0;
+
+            if((EFFECTS_NONE < effect) && (EFFECTS_MAX > effect))
             {
                 switch(effect)
                 {
-                    case MODULATION:
-                        ctrl_msg2[PEDAL_TYPE_IDX]  = _MODULATION;
+                    case EFFECTS_MODULATION:
+                        ctrl_msg2[PEDAL_TYPE_IDX]  = PEDAL_TYPE_MODULATION;
                         ctrl_msg2[PEDAL_ON_IDX]    = state;
                         break;
-                    case DELAY:
-                        ctrl_msg2[PEDAL_TYPE_IDX]  = _DELAY;
+                    case EFFECTS_DELAY:
+                        ctrl_msg2[PEDAL_TYPE_IDX]  = PEDAL_TYPE_DELAY;
                         ctrl_msg2[PEDAL_ON_IDX]    = state;
                         break;
-                    case STOMP:
-                        ctrl_msg2[PEDAL_TYPE_IDX]  = _STOMP;
+                    case EFFECTS_STOMP:
+                        ctrl_msg2[PEDAL_TYPE_IDX]  = PEDAL_TYPE_STOMP;
                         ctrl_msg2[PEDAL_ON_IDX]    = state;
                         break;
-                    case VOLUME:
-                        ctrl_msg2[PEDAL_TYPE_IDX]  = _VOLUME;
+                    case EFFECTS_VOLUME:
+                        ctrl_msg2[PEDAL_TYPE_IDX]  = PEDAL_TYPE_VOLUME;
                         ctrl_msg2[PEDAL_ON_IDX]    = state;
                         break;
-                    case COMPRESSOR:
-                        ctrl_msg2[PEDAL_TYPE_IDX]  = _COMPRESSOR;
+                    case EFFECTS_COMPRESSOR:
+                        ctrl_msg2[PEDAL_TYPE_IDX]  = PEDAL_TYPE_COMPRESSOR;
                         ctrl_msg2[PEDAL_ON_IDX]    = state;
                         break;
-                    case EQUALIZER:
-                        ctrl_msg2[PEDAL_TYPE_IDX]  = _EQUALIZER;
+                    case EFFECTS_EQUALIZER:
+                        ctrl_msg2[PEDAL_TYPE_IDX]  = PEDAL_TYPE_EQUALIZER;
                         ctrl_msg2[PEDAL_ON_IDX]    = state;
                         break;
-                    case GATE:
-                        ctrl_msg2[PEDAL_TYPE_IDX]  = _GATE;
+                    case EFFECTS_GATE:
+                        ctrl_msg2[PEDAL_TYPE_IDX]  = PEDAL_TYPE_GATE;
                         ctrl_msg2[PEDAL_ON_IDX]    = state;
                         break;
-                    case REVERB:
-                        ctrl_msg2[PEDAL_TYPE_IDX]  = _REVERB;
+                    case EFFECTS_REVERB:
+                        ctrl_msg2[PEDAL_TYPE_IDX]  = PEDAL_TYPE_REVERB;
                         ctrl_msg2[PEDAL_ON_IDX]    = state;
                         break;
-                    case WAH:
-                        ctrl_msg2[PEDAL_TYPE_IDX]  = _WAH;
+                    case EFFECTS_WAH:
+                        ctrl_msg2[PEDAL_TYPE_IDX]  = PEDAL_TYPE_WAH;
                         ctrl_msg2[PEDAL_ON_IDX]    = state;
                         break;
-                    case BANK_UP:
-                        bank_msg1[BANK_UP_DOWN_IDX] = UP;
+                    case EFFECTS_BANK_UP:
+                        bank_msg1[BANK_UP_DOWN_IDX] = preset;
 
                         ret = BANK_UP1;
                         break;
-                    case BANK_DOWN:
-                        bank_msg1[BANK_UP_DOWN_IDX] = DOWN;
+                    case EFFECTS_BANK_DOWN:
+                        bank_msg1[BANK_UP_DOWN_IDX] = preset;
 
                         ret = BANK_DOWN1;
                         break;
@@ -458,12 +521,11 @@ static comm_state fbv3_process_commands(void)
                         break;
                 }
 
-                ret = true;
-                fprintf(stderr, "got command %d! effect 0x%x state %d\n", i, (int)effect, (int)state);
+                fprintf(stderr, "got command %d! effect 0x%x state %d, preset %d \n", i, (int)effect, (int)state, preset);
             }
             else
             {
-                ret = false;
+                ret = WAIT;
                 fprintf(stderr, "unknown effect type 0x%x", (int)effect);
             }
 

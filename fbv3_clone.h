@@ -8,18 +8,18 @@
 /// Enum of all effects
 enum effects
 {
-    NO_EFFECT,
-    MODULATION,
-    DELAY,
-    STOMP,
-    VOLUME,
-    COMPRESSOR,
-    EQUALIZER,
-    GATE,
-    REVERB,
-    WAH,
-    BANK_UP,
-    BANK_DOWN,
+    EFFECTS_NONE,
+    EFFECTS_MODULATION,
+    EFFECTS_DELAY,
+    EFFECTS_STOMP,
+    EFFECTS_VOLUME,
+    EFFECTS_COMPRESSOR,
+    EFFECTS_EQUALIZER,
+    EFFECTS_GATE,
+    EFFECTS_REVERB,
+    EFFECTS_WAH,
+    EFFECTS_BANK_UP,
+    EFFECTS_BANK_DOWN,
     EFFECTS_MAX
 };
 
@@ -44,6 +44,8 @@ bool fbv3_ready(void);
 bool fbv3_process(void);
 void fbv3_close(void);
 void fbv3_update_effect_switch(enum effects effect, bool on_off); 
+void fbv3_increment_preset(void);
+void fbv3_decrement_preset(void);
 struct fbv3_state * fbv3_get_states(void);
 
 #endif //FBV3_CLONE_H

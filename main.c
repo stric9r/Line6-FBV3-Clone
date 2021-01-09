@@ -22,11 +22,12 @@
 #define REVERB_PIN     28 /*Pin 38*/
 #define WAH_PIN        29 /*Pin 40*/
 #define BANK_UP_PIN     2 /*Pin ??*/
-//#define BANK_DOWN_PIN   0 /*Pin ??*/
+#define BANK_DOWN_PIN   0 /*Pin ??*/
 
 /*prototypes*/
 void setup_gpio(void);
-void gpio_to_fbv3_effect(void);
+bool gpio_to_fbv3_effect(bool latching);
+bool gpio_process(int pin, enum effects effect, int * state, bool latching);
 
 /// @brief Main program entry
 int main(int argc, char *argv[])
@@ -44,7 +45,13 @@ int main(int argc, char *argv[])
         if(fbv3_ready())
         {
           //poll the gpio and add to command queue
-          gpio_to_fbv3_effect();
+          bool event_trigger = gpio_to_fbv3_effect(false);
+
+          // poor debounce
+          if(event_trigger)
+          {
+              delay(50); //50 milliseconds
+          }
         }
                
         //process anything in the queue
@@ -61,6 +68,7 @@ void setup_gpio()
 {
     wiringPiSetup();
 
+    // set inputs
     pinMode(DELAY_PIN, INPUT);
     pinMode(MODULATION_PIN, INPUT);
     pinMode(STOMP_PIN, INPUT);
@@ -70,103 +78,71 @@ void setup_gpio()
     pinMode(GATE_PIN, INPUT);
     pinMode(REVERB_PIN, INPUT);
     pinMode(WAH_PIN, INPUT);
-    pinMode(BANK_PIN, INPUT);
+    pinMode(BANK_UP_PIN, INPUT);
+    pinMode(BANK_DOWN_PIN, INPUT);
+
+    // use pull ups, no floating pins
+    pullUpDnControl(DELAY_PIN, PUD_DOWN);
+    pullUpDnControl(MODULATION_PIN, PUD_DOWN);
+    pullUpDnControl(STOMP_PIN, PUD_DOWN);
+    pullUpDnControl(VOLUME_PIN, PUD_DOWN);
+    pullUpDnControl(COMPRESSOR_PIN, PUD_DOWN);
+    pullUpDnControl(EQUALIZER_PIN, PUD_DOWN);
+    pullUpDnControl(GATE_PIN, PUD_DOWN);
+    pullUpDnControl(REVERB_PIN, PUD_DOWN);
+    pullUpDnControl(WAH_PIN, PUD_DOWN);
+    pullUpDnControl(BANK_UP_PIN, PUD_DOWN);
+    pullUpDnControl(BANK_DOWN_PIN, PUD_DOWN);
+}
+
+/// @brief Handle GPIO presses 
+///
+/// @return True if an event happened
+bool gpio_process(int pin, enum effects effect, int * state, bool latching)
+{
+    bool ret = false; 
+    int pin_state = digitalRead(pin);
+    
+    if(latching  && (pin_state != *state))
+    {
+        *state = pin_state; //set,unset
+        fbv3_update_effect_switch(effect, (*state == HIGH) ? true:false); 
+        ret = true;
+    }
+    else if (!latching && (pin_state == HIGH)) //pedal pressed
+    {
+        *state = (*state == HIGH) ? LOW:HIGH; //toggle
+        fbv3_update_effect_switch(effect, (*state == HIGH) ? true:false); 
+        ret = true;
+    }
+    else
+    {
+        //do nothing
+    }
+
+    return ret;
 }
 
 /// @brief Reads GPIO and issues effect commands to the FBV3 module
-void gpio_to_fbv3_effect(void)
+///
+/// @return True if event happened
+bool gpio_to_fbv3_effect(bool latching)
 {
+    bool ret = false;
     struct fbv3_state * fbv3_states = fbv3_get_states();
-    int pin_state = LOW;
-    
-    pin_state = digitalRead(DELAY_PIN);
-    if(pin_state != fbv3_states->delay_state)
-    {
-        fprintf(stderr, "delay pin %d local %d\n", pin_state, fbv3_states->delay_state);
-    
-        fbv3_update_effect_switch(DELAY, (pin_state == HIGH) ? true:false); 
-        fbv3_states->delay_state = pin_state;
-    }
-    
-    pin_state = digitalRead(MODULATION_PIN);
-    if(pin_state != fbv3_states->modulation_state)
-    {
-        fprintf(stderr, "modulation pin %d local %d\n", pin_state, fbv3_states->modulation_state);
-    
-        fbv3_update_effect_switch(MODULATION, (pin_state == HIGH) ? true:false); 
-        fbv3_states->modulation_state = pin_state;
-    }
 
-    pin_state = digitalRead(STOMP_PIN);
-    if(pin_state != fbv3_states->stomp_state)
-    {
-        fprintf(stderr, "stomp pin %d local %d\n", pin_state, fbv3_states->stomp_state);
-        
-        fbv3_update_effect_switch(STOMP, (pin_state == HIGH) ? true:false); 
-        fbv3_states->stomp_state = pin_state;
-    }
-    
-    pin_state = digitalRead(VOLUME_PIN);
-    if(pin_state != fbv3_states->volume_state)
-    {
-        fprintf(stderr, "volume pin %d local %d\n", pin_state, fbv3_states->volume_state);
-        
-        fbv3_update_effect_switch(VOLUME, (pin_state == HIGH) ? true:false); 
-        fbv3_states->volume_state = pin_state;
-    }
-  
-    pin_state = digitalRead(COMPRESSOR_PIN);
-    if(pin_state != fbv3_states->compressor_state)
-    {
-        fprintf(stderr, "compressor pin %d local %d\n", pin_state, fbv3_states->compressor_state);
-        
-        fbv3_update_effect_switch(COMPRESSOR, (pin_state == HIGH) ? true:false); 
-        fbv3_states->compressor_state = pin_state;
-    }
-    
-    pin_state = digitalRead(EQUALIZER_PIN);
-    if(pin_state != fbv3_states->equalizer_state)
-    {
-        fprintf(stderr, "equalizer pin %d local %d\n", pin_state, fbv3_states->equalizer_state);
-        
-        fbv3_update_effect_switch(EQUALIZER, (pin_state == HIGH) ? true:false); 
-        fbv3_states->equalizer_state = pin_state;
-    }
+    ret |= gpio_process(DELAY_PIN, EFFECTS_DELAY, &fbv3_states->delay_state, latching);
+    ret |= gpio_process(MODULATION_PIN, EFFECTS_MODULATION, &fbv3_states->modulation_state, latching);
+    ret |= gpio_process(STOMP_PIN, EFFECTS_STOMP, &fbv3_states->stomp_state, latching);
+    ret |= gpio_process(VOLUME_PIN, EFFECTS_VOLUME, &fbv3_states->volume_state, latching);
+    ret |= gpio_process(COMPRESSOR_PIN, EFFECTS_COMPRESSOR, &fbv3_states->compressor_state, latching);
+    ret |= gpio_process(EQUALIZER_PIN, EFFECTS_EQUALIZER, &fbv3_states->equalizer_state, latching);
+    ret |= gpio_process(GATE_PIN, EFFECTS_GATE, &fbv3_states->gate_state, latching);
+    ret |= gpio_process(REVERB_PIN, EFFECTS_REVERB, &fbv3_states->reverb_state, latching);
+    ret |= gpio_process(WAH_PIN, EFFECTS_WAH, &fbv3_states->wah_state, latching);
+    ret |= gpio_process(BANK_UP_PIN, EFFECTS_BANK_UP, &fbv3_states->bank_up_state, latching);
+    ret |= gpio_process(BANK_DOWN_PIN, EFFECTS_BANK_DOWN, &fbv3_states->bank_down_state, latching);
 
-    pin_state = digitalRead(REVERB_PIN);
-    if(pin_state != fbv3_states->reverb_state)
-    {
-        fprintf(stderr, "reverb pin %d local %d\n", pin_state, fbv3_states->reverb_state);
-        
-        fbv3_update_effect_switch(REVERB, (pin_state == HIGH) ? true:false); 
-        fbv3_states->reverb_state = pin_state;
-    }
-
-    pin_state = digitalRead(WAH_PIN);
-    if(pin_state != fbv3_states->wah_state)
-    {
-        fprintf(stderr, "wah pin %d local %d\n", pin_state, fbv3_states->wah_state);
-        
-        fbv3_update_effect_switch(WAH, (pin_state == HIGH) ? true:false); 
-        fbv3_states->wah_state = pin_state;
-    }
-
-    pin_state = digitalRead(BANK_UP_PIN);
-    if(pin_state != fbv3_states->bank_state)
-    {
-        fprintf(stderr, "bank up pin %d local %d\n", pin_state, fbv3_states->bank_up_state);
-        
-        fbv3_update_effect_switch(BANK_UP, true); //state is forced true in fbv3 clone module
-        fbv3_states->bank_up_state = pin_state;
-    }
-
-    pin_state = digitalRead(BANK_DOWN_PIN);
-    if(pin_state != fbv3_states->bank_state)
-    {
-        fprintf(stderr, "bank down pin %d local %d\n", pin_state, fbv3_states->bank_down_state);
-        
-        fbv3_update_effect_switch(BANK_UP, false); //state is forced false in fbv3 clone module
-        fbv3_states->bank_down_state = pin_state;
-    }
-
+    return ret;
 }
+
