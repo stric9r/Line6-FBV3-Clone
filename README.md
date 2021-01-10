@@ -17,11 +17,15 @@ No schematic yet, just the code (currently using wires shorted together to simul
 
 ## Prereqs
 Libusb: 
+
 sudo apt-get install libusb-1.0-0-dev
 
 WiringPi 2.52 or higher:
+
 cd /tmp
+
 wget https://project-downloads.drogon.net/wiringpi-latest.deb
+
 sudo dpkg -i wiringpi-latest.deb
 
 ## Building using GCC
