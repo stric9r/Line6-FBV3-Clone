@@ -9,8 +9,8 @@
 #define L6_INTERFACE        0x02 /// 0 - 5 Interface number to claim (2 is for control)
 #define L6_ENDPOINT_OUT     0x02 /// OUT pipe from USB Host
 #define L6_ENDPOINT_IN      0x82 /// IN pipe from USB Host
-#define L6_TIMEOUT_OUT      2000 /// ms
-#define L6_TIMEOUT_IN       250  /// ms
+#define L6_TIMEOUT_OUT      100  /// ms
+#define L6_TIMEOUT_IN       100  /// ms
 #define L6_TOTAL_INTERFACES 5    /// Max number of interfaces, observed using USB Device Tree
 
 /// Packet sizes
