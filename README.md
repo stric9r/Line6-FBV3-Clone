@@ -15,6 +15,15 @@ FUTURE PLATFORM: Raspberry Pi Zero W.
 ## Schematic 
 No schematic yet, just the code (currently using wires shorted together to simulate button presses).
 
+## Prereqs
+Libusb: 
+sudo apt-get install libusb-1.0-0-dev
+
+WiringPi 2.52 or higher:
+cd /tmp
+wget https://project-downloads.drogon.net/wiringpi-latest.deb
+sudo dpkg -i wiringpi-latest.deb
+
 ## Building using GCC
 gcc -o fbv3 main.c fbv3_clone.c -lwiringPi -lusb-1.0
 
