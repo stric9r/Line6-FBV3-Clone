@@ -1,21 +1,22 @@
 # Line-6-FBV3-Clone
 Clone of USB interface between Line6 FBV3 (foot controller) and a Line6 Spider V amplifier. 
-The FBV3 is simulated using a Raspberry Pi 4B.  
+The FBV3 is simulated using a Raspberry Pi.  
 It's current state only allows for authentication, changing presets, and simple ON/OFF commands for effects. 
-This is still very much a work in progress.
+This is still very much a work in progress, mainly need to decipher feedback to get ON/OFF status.
 
 ## Platform
-The hardware platform used is Raspberry Pi 4B (Linux 5.4.79-v7l+ armv7l).  
+The hardware platforms tested are Raspberry Pi 4B (Linux 5.4.79-v7l+ armv7l) and Raspberry Pi Zero W (Linux 5.4.83+ armv6l)
+
 It using wiringPi and libUSB.  It's important to upgrade wiringPi to version 2.52 or higher for it to work.
 
 The platform can easily change, all platform specific code is in main. 
 
-FUTURE PLATFORM: Raspberry Pi Zero W.
-
 ## Schematic 
-No schematic yet, just the code (currently using wires shorted together to simulate button presses).
+No schematic, it's litteraly buttons tied to the GPIO being software debounced.  See main.c for the current gpio usuage, or to change it.
 
 ## Prereqs
+There are only two prereqs, and that's Libusb and updating WiringPi (mainly for Raspberry Pi 4B to work). Below are how you get them.
+
 Libusb: 
 
 sudo apt-get install libusb-1.0-0-dev
@@ -35,7 +36,7 @@ gcc -o fbv3 main.c fbv3_clone.c -lwiringPi -lusb-1.0
 ### fbv3_clone.c
 ### fbv3_clone.h
 Floor Board Version 3 Clone code.
-It contains basic functionality to turn on/off certain effects.
+It contains basic functionality to turn on/off certain effects, and switch presets (banks) up and down.
 
 ### fbv3_defines.h
 Define file that holds all connection specific defines, array sizes, command values, etc.
