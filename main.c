@@ -24,6 +24,9 @@
 #define BANK_UP_PIN     1 /*Pin 12*/
 #define BANK_DOWN_PIN   4 /*Pin 16*/
 
+/// Used to debounce the buttons
+#define DEBOUNCE_DELAY 100 /*100 ms*/
+
 /*prototypes*/
 void setup_gpio(void);
 bool gpio_to_fbv3_effect(bool latching);
@@ -50,7 +53,7 @@ int main(int argc, char *argv[])
           // poor debounce
           if(b_event)
           {
-              delay(50); //50 milliseconds
+              delay(DEBOUNCE_DELAY);
           }
         }
                
