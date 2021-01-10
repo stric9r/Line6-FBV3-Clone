@@ -10,7 +10,7 @@
 
 /*defines*/
 
-/// Mapping to wPi from raspberry pi 4b pinout on header
+/// Mapping to wPi from raspberry pi 4b and pi zero w pinout on header
 /// Mapping can be seen by running command "gpio readall"
 #define DELAY_PIN       0 /*Pin 11*/
 #define MODULATION_PIN  2 /*Pin 13*/
