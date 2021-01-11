@@ -2,6 +2,7 @@
 #define FBV3_H
 
 #include <stdbool.h>
+#include <stdint.h>
 
 /*enums and defines*/
 
@@ -26,17 +27,17 @@ enum effects
 /// Keeps the current state of the effects on/off
 struct fbv3_state
 {
-  int fx3_state;
-  int fx2_state;
-  int fx1_state;
-  int volume_state;
-  int compressor_state;
-  int equalizer_state;
-  int gate_state;
-  int reverb_state;
-  int wah_state;
-  int bank_up_state;
-  int bank_down_state;
+  int8_t fx3_state;
+  int8_t fx2_state;
+  int8_t fx1_state;
+  int8_t volume_state;
+  int8_t compressor_state;
+  int8_t equalizer_state;
+  int8_t gate_state;
+  int8_t reverb_state;
+  int8_t wah_state;
+  int8_t bank_up_state;
+  int8_t bank_down_state;
 };
 
 bool fbv3_init(void);

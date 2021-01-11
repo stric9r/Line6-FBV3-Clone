@@ -1,4 +1,4 @@
-#include "fbv3_clone.h"
+#include "fbv3.h"
 #include "fbv3_store.h"
 #include "fbv3_defines.h"
 
@@ -6,6 +6,7 @@
 #include <stdbool.h>
 #include <string.h>
 #include <unistd.h>
+#include <stdint.h>
 #include <libusb-1.0/libusb.h>
 
 

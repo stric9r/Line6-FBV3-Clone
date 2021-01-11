@@ -1,6 +1,7 @@
 #include "fbv3_store.h"
 #include <stdio.h>
 #include <stdbool.h>
+#include <stdint.h>
 #include <string.h>
 
 /*defines*/
@@ -28,7 +29,7 @@ bool fbv3_store_set_data_to_file(char * p_param, int32_t val);
 /// @brief 
 void fbv3_store_init(void)
 {
-    int32_t data = 0;;
+    int32_t data = 0;
     if(fbv3_store_get_data_from_file(PARAM_PRESET, &data))
     {
         current_preset = (int8_t)data;

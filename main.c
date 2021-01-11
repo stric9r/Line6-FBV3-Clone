@@ -6,6 +6,7 @@
 #include <wiringPi.h>
 #include <stdio.h>
 #include <stdbool.h>
+#include <stdint.h>
 #include <unistd.h>
 
 /*defines*/
@@ -30,7 +31,7 @@
 /*prototypes*/
 void setup_gpio(void);
 bool gpio_to_fbv3_effect(bool latching);
-bool gpio_process(int pin, enum effects effect, int * p_state, bool latching);
+bool gpio_process(int pin, enum effects effect, int8_t * p_state, bool latching);
 
 /// @brief Main program entry
 int main(int argc, char *argv[])
@@ -106,10 +107,10 @@ void setup_gpio()
 /// @param latching is the switch latching or momentary
 ///
 /// @return True if an event happened
-bool gpio_process(int pin, enum effects effect, int * p_state, bool latching)
+bool gpio_process(int pin, enum effects effect, int8_t * p_state, bool latching)
 {
     bool ret = false; 
-    int pin_state = digitalRead(pin);
+    int8_t pin_state = (int8_t)digitalRead(pin);
     
     if(latching  && (pin_state != *p_state))
     {
