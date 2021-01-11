@@ -12,9 +12,9 @@
 
 /// Mapping to wPi from raspberry pi 4b and pi zero w pinout on header
 /// Mapping can be seen by running command "gpio readall"
-#define DELAY_PIN       0 /*Pin 11*/
-#define MODULATION_PIN  2 /*Pin 13*/
-#define STOMP_PIN       3 /*Pin 15*/
+#define FX3_PIN         0 /*Pin 11*/
+#define FX2_PIN         2 /*Pin 13*/
+#define FX1_PIN         3 /*Pin 15*/
 #define VOLUME_PIN     23 /*Pin 33*/
 #define COMPRESSOR_PIN 24 /*Pin 35*/
 #define EQUALIZER_PIN  25 /*Pin 37*/
@@ -72,9 +72,9 @@ void setup_gpio()
     wiringPiSetup();
 
     // set inputs
-    pinMode(DELAY_PIN, INPUT);
-    pinMode(MODULATION_PIN, INPUT);
-    pinMode(STOMP_PIN, INPUT);
+    pinMode(FX3_PIN, INPUT);
+    pinMode(FX2_PIN, INPUT);
+    pinMode(FX1_PIN, INPUT);
     pinMode(VOLUME_PIN, INPUT);
     pinMode(COMPRESSOR_PIN, INPUT);
     pinMode(EQUALIZER_PIN, INPUT);
@@ -85,9 +85,9 @@ void setup_gpio()
     pinMode(BANK_DOWN_PIN, INPUT);
 
     // use pull ups, no floating pins
-    pullUpDnControl(DELAY_PIN, PUD_DOWN);
-    pullUpDnControl(MODULATION_PIN, PUD_DOWN);
-    pullUpDnControl(STOMP_PIN, PUD_DOWN);
+    pullUpDnControl(FX3_PIN, PUD_DOWN);
+    pullUpDnControl(FX2_PIN, PUD_DOWN);
+    pullUpDnControl(FX1_PIN, PUD_DOWN);
     pullUpDnControl(VOLUME_PIN, PUD_DOWN);
     pullUpDnControl(COMPRESSOR_PIN, PUD_DOWN);
     pullUpDnControl(EQUALIZER_PIN, PUD_DOWN);
@@ -139,9 +139,9 @@ bool gpio_to_fbv3_effect(bool latching)
     bool ret = false;
     struct fbv3_state * p_fbv3_states = fbv3_get_states();
 
-    ret |= gpio_process(DELAY_PIN, EFFECTS_DELAY, &p_fbv3_states->delay_state, latching);
-    ret |= gpio_process(MODULATION_PIN, EFFECTS_MODULATION, &p_fbv3_states->modulation_state, latching);
-    ret |= gpio_process(STOMP_PIN, EFFECTS_STOMP, &p_fbv3_states->stomp_state, latching);
+    ret |= gpio_process(FX3_PIN, EFFECTS_FX3, &p_fbv3_states->fx3_state, latching);
+    ret |= gpio_process(FX2_PIN, EFFECTS_FX2, &p_fbv3_states->fx2_state, latching);
+    ret |= gpio_process(FX1_PIN, EFFECTS_FX1, &p_fbv3_states->fx1_state, latching);
     ret |= gpio_process(VOLUME_PIN, EFFECTS_VOLUME, &p_fbv3_states->volume_state, latching);
     ret |= gpio_process(COMPRESSOR_PIN, EFFECTS_COMPRESSOR, &p_fbv3_states->compressor_state, latching);
     ret |= gpio_process(EQUALIZER_PIN, EFFECTS_EQUALIZER, &p_fbv3_states->equalizer_state, latching);

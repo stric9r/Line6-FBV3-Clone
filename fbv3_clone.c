@@ -131,9 +131,9 @@ static unsigned char bank_msg2[BANK_40_SZ] = {0x04, 0xF0, 0x00, 0x01,
 static char const * const effects_strings[EFFECTS_MAX] = 
 {
   "NONE",
-  "MODULATION",
-  "DELAY",
-  "STOMP",
+  "FX3",
+  "FX2",
+  "FX1",
   "VOLUME",
   "COMPRESSOR",
   "EQUALIZER",
@@ -505,18 +505,18 @@ static enum comm_state fbv3_process_commands(void)
             {
                 switch(effect)
                 {
-                    case EFFECTS_MODULATION:
-                        ctrl_msg2[PEDAL_TYPE_IDX]  = PEDAL_TYPE_MODULATION;
+                    case EFFECTS_FX2:
+                        ctrl_msg2[PEDAL_TYPE_IDX]  = PEDAL_TYPE_FX2;
                         ctrl_msg2[PEDAL_ON_IDX]    = state;
                         ret = COMM_STATE_CTRL1;
                         break;
-                    case EFFECTS_DELAY:
-                        ctrl_msg2[PEDAL_TYPE_IDX]  = PEDAL_TYPE_DELAY;
+                    case EFFECTS_FX3:
+                        ctrl_msg2[PEDAL_TYPE_IDX]  = PEDAL_TYPE_FX3;
                         ctrl_msg2[PEDAL_ON_IDX]    = state;
                         ret = COMM_STATE_CTRL1;
                         break;
-                    case EFFECTS_STOMP:
-                        ctrl_msg2[PEDAL_TYPE_IDX]  = PEDAL_TYPE_STOMP;
+                    case EFFECTS_FX1:
+                        ctrl_msg2[PEDAL_TYPE_IDX]  = PEDAL_TYPE_FX1;
                         ctrl_msg2[PEDAL_ON_IDX]    = state;
                         ret = COMM_STATE_CTRL1;
                         break;
