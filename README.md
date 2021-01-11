@@ -30,7 +30,7 @@ wget https://project-downloads.drogon.net/wiringpi-latest.deb
 sudo dpkg -i wiringpi-latest.deb
 
 ## Building using GCC
-gcc -o fbv3 main.c fbv3_clone.c -lwiringPi -lusb-1.0
+gcc -o fbv3 main.c fbv3_store.c fbv3.c -lwiringPi -lusb-1.0
 
 ## File descriptions
 ### fbv3_clone.c
