@@ -3,6 +3,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <string.h>
+#include <stdlib.h>
 
 /*defines*/
 
@@ -142,7 +143,7 @@ bool fbv3_store_set_data_to_file(char * p_param, int32_t val)
                 strncpy(&buffer[idx], p_param, sz);
 
                 idx += sz;
-                sz = strlen(" ")
+                sz = strlen(" ");
                 strncpy(&buffer[idx], " ", sz);
 
                 idx += sz;
