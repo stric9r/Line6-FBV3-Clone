@@ -9,9 +9,9 @@
 enum effects
 {
     EFFECTS_NONE,
-    EFFECTS_MODULATION,
-    EFFECTS_DELAY,
-    EFFECTS_STOMP,
+    EFFECTS_FX3,
+    EFFECTS_FX2,
+    EFFECTS_FX1,
     EFFECTS_VOLUME,
     EFFECTS_COMPRESSOR,
     EFFECTS_EQUALIZER,
@@ -26,9 +26,9 @@ enum effects
 /// Keeps the current state of the effects on/off
 struct fbv3_state
 {
-  int delay_state;
-  int modulation_state;
-  int stomp_state;
+  int fx3_state;
+  int fx2_state;
+  int fx1_state;
   int volume_state;
   int compressor_state;
   int equalizer_state;

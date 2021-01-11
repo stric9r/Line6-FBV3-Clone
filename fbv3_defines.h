@@ -29,9 +29,9 @@
 #define BANK_UP_DOWN_IDX 30
 
 /// Pedal types, assigned at index PEDAL_TYPE_IDX
-#define PEDAL_TYPE_DELAY      0x46
-#define PEDAL_TYPE_MODULATION 0x47
-#define PEDAL_TYPE_STOMP      0x48
+#define PEDAL_TYPE_FX3        0x46
+#define PEDAL_TYPE_FX2        0x47
+#define PEDAL_TYPE_FX1        0x48
 #define PEDAL_TYPE_VOLUME     0x49
 #define PEDAL_TYPE_COMPRESSOR 0x4A
 #define PEDAL_TYPE_EQUALIZER  0x4B
