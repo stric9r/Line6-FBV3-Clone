@@ -138,18 +138,7 @@ bool fbv3_store_set_data_to_file(char * p_param, int32_t val)
             /// found, write line
             if(strcmp(buffer, p_param) == 0)
             {
-                size_t idx = 0;
-                size_t sz = strlen(p_param);
-                strncpy(&buffer[idx], p_param, sz);
-
-                idx += sz;
-                sz = strlen(" ");
-                strncpy(&buffer[idx], " ", sz);
-
-                idx += sz;
-                sz = strlen(itoa(val));
-                strncpy(&buffer[idx], itoa(val), sz);
-
+                sprintf(&buffer[0], "%s %d\n", param_name, val);
                 fputs(buffer, fp);
 
                 ret_val = true;

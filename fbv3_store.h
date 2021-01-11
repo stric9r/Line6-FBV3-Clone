@@ -1,8 +1,7 @@
 #ifndef FBV3_STORE_H
 #define FBV3_STORE_H
 
-#include <unistd.h>
-
+#include <stdint.h>
 
 void fbv3_store_init(void);
 int8_t fbv3_store_get_preset(void);
