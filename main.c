@@ -13,7 +13,7 @@
 
 /// Mapping to wPi from raspberry pi 4b and pi zero w pinout on header
 /// Mapping can be seen by running command "gpio readall"
-#define FX3_PIN         0 /*Pin 11*/
+#define FX3_PIN         1 /*0 /*Pin 11*/
 #define FX2_PIN         2 /*Pin 13*/
 #define FX1_PIN         3 /*Pin 15*/
 #define VOLUME_PIN     23 /*Pin 33*/
@@ -22,7 +22,7 @@
 #define GATE_PIN       27 /*Pin 36*/
 #define REVERB_PIN     28 /*Pin 38*/
 #define WAH_PIN        29 /*Pin 40*/
-#define BANK_UP_PIN     1 /*Pin 12*/
+#define BANK_UP_PIN     0 /*1 /*Pin 12*/
 #define BANK_DOWN_PIN   4 /*Pin 16*/
 
 /// Used to debounce the buttons

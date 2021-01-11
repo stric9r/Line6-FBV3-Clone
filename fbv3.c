@@ -236,6 +236,16 @@ bool fbv3_init(void)
           fprintf(stderr, "there was a problem getting handle ret status  %d, handle %d\n", status, p_handle);
       }
     }
+    
+    // Force to bank read from storage file, in command queue
+    if(status == LIBUSB_SUCCESS)
+    {
+        //this is a bit of a hack.
+        //decemrent the preset internally, then simulate a bank up command.
+        //if the storage file doesn't exist, nothing will happen.
+        preset_num_store = preset_num_store - 1;
+        fbv3_update_effect_switch(EFFECTS_BANK_UP, true);
+    }
 
     return status == LIBUSB_SUCCESS ? true : false;
 }
@@ -373,6 +383,8 @@ bool fbv3_process(void)
           buff_out = bank_msg2;
           buff_out_sz = BANK_40_SZ;
           strcpy(description, "BANK2 MSG");
+          
+          fbv3_store_set_preset(preset_num_store);
           
           state = COMM_STATE_WAIT; //force back into wait to process next message
         default:

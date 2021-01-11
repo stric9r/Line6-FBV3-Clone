@@ -87,10 +87,10 @@ bool fbv3_store_get_data_from_file(char * p_param, int32_t * p_val)
     {
         while(fgets(buffer, BUFFER_SIZE, fp) != NULL)
         {
-            scanf(buffer, "%s %d", param_name, &param_val);
+            sscanf(buffer, "%s %d", param_name, &param_val);
 
             /// found
-            if(strcmp(buffer, p_param) == 0)
+            if(strncmp(buffer, p_param, sizeof(p_param)) == 0)
             {
                 *p_val = param_val;
 
@@ -98,9 +98,13 @@ bool fbv3_store_get_data_from_file(char * p_param, int32_t * p_val)
                 break;
             }
         }
-    }
 
-    fclose(fp);
+        fclose(fp);
+    }
+    else
+    {
+        fprintf(stderr, "storage file not found\n");
+    }
 
     return ret_val;
 }
@@ -131,24 +135,29 @@ bool fbv3_store_set_data_to_file(char * p_param, int32_t val)
     // file open, set the data
     if(fp != NULL)
     {
+        rewind(fp); //start of file
+    
         while(fgets(buffer, BUFFER_SIZE, fp) != NULL)
         {
-            scanf(buffer, "%s %d", param_name, &param_val);
+            sscanf(buffer, "%s %d", param_name, &param_val);
 
             /// found, write line
-            if(strcmp(buffer, p_param) == 0)
+            if(strncmp(buffer, p_param, sizeof(p_param)) == 0)
             {
-                sprintf(&buffer[0], "%s %d\n", param_name, val);
+                sprintf(&buffer[0], "%s %d", p_param, val);
                 fputs(buffer, fp);
 
                 ret_val = true;
                 break;
             }
         }
+        
+        fclose(fp);
+    }
+    else
+    {
+        fprintf(stderr, "storage file not found\n");
     }
 
-    fclose(fp);
-
     return ret_val;
-
 }
