@@ -1,5 +1,5 @@
-#ifndef FBV3_CLONE_H
-#define FBV3_CLONE_H
+#ifndef FBV3_H
+#define FBV3_H
 
 #include <stdbool.h>
 
@@ -48,4 +48,4 @@ void fbv3_increment_preset(void);
 void fbv3_decrement_preset(void);
 struct fbv3_state * fbv3_get_states(void);
 
-#endif //FBV3_CLONE_H
+#endif //FBV3_H
