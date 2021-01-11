@@ -1,8 +1,8 @@
 //How to build
-//gcc -o fbv3 main.c fbv3_clone.c -lwiringPi -lusb-1.0
+//gcc -o fbv3 main.c fbv3_store.c fbv3.c -lwiringPi -lusb-1.0
 
 
-#include "fbv3_clone.h"
+#include "fbv3.h"
 #include <wiringPi.h>
 #include <stdio.h>
 #include <stdbool.h>
