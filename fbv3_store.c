@@ -18,10 +18,10 @@
 #define PARAM_VALUE_SIZE 16
 
 /// Params in the file
-#define PARAM_PRESET "preset"
+#define PARAM_PRESET  "preset"
+#define PARAM_BANK    "bank"
 
 /*enums and structs*/
-
 
 /*variables*/
 
@@ -34,23 +34,30 @@ static char storage[PARAM_MAX][PARAM_SIZE];
 
 /// params broken out for use
 static int8_t current_preset = 0;
+static int8_t current_bank = 0;
 
 /*function prototypes*/
 bool fbv3_store_get_data_from_file(char * p_param, int32_t * p_val);
 bool fbv3_store_set_data_to_file(char * p_param, int32_t val);
 
-/// @brief 
+/// @brief Get configuration data from storage file.
+///        Will populate pedal for use with stored config data.
 void fbv3_store_init(void)
 {
     buffer_read = false;
 
-    //empty storage
+    // make sure storage is empty
     memset(storage, 0, (PARAM_MAX * PARAM_SIZE)*sizeof(char));
 
     int32_t data = 0;
     if(fbv3_store_get_data_from_file(PARAM_PRESET, &data))
     {
         current_preset = (int8_t)data;
+    }
+    
+    if(fbv3_store_get_data_from_file(PARAM_BANK, &data))
+    {
+        current_bank = (int8_t)data;
     }
     //...
     //...
@@ -75,13 +82,31 @@ void fbv3_store_set_preset(int8_t preset)
     (void)fbv3_store_set_data_to_file(PARAM_PRESET, (int32_t) preset);
 }
 
+/// @brief Get the bank value
+///
+/// @return the bank value read from file
+int8_t fbv3_store_get_bank(void)
+{
+    return current_bank;
+}
+
+/// @brief Set the new bank value, write to file.
+///
+/// @param preset the bank number to write to file
+void fbv3_store_set_bank(int8_t bank)
+{
+    current_bank = bank;
+
+    (void)fbv3_store_set_data_to_file(PARAM_BANK, (int32_t) bank);
+}
+
 
 /// @brief Opens file on startup and gets specified params.
 ///        Puts them in local storage buffers.
 ///        Each line format is like (example):
 ///
 ///        preset 5\n
-///        other 2\n
+///        bank 2\n
 ///        data 3\n
 ///
 ///        Just the param name, a space, then the number

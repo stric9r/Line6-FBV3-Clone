@@ -21,6 +21,10 @@ enum effects
     EFFECTS_WAH,
     EFFECTS_BANK_UP,
     EFFECTS_BANK_DOWN,
+    EFFECTS_A,
+    EFFECTS_B,
+    EFFECTS_C,
+    EFFECTS_D,
     EFFECTS_MAX
 };
 
@@ -38,6 +42,10 @@ struct fbv3_state
   int8_t wah_state;
   int8_t bank_up_state;
   int8_t bank_down_state;
+  int8_t a_state;
+  int8_t b_state;
+  int8_t c_state;
+  int8_t d_state;
 };
 
 bool fbv3_init(void);

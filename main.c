@@ -13,7 +13,7 @@
 
 /// Mapping to wPi from raspberry pi 4b and pi zero w pinout on header
 /// Mapping can be seen by running command "gpio readall"
-#define FX3_PIN         1 /*0 /*Pin 11*/
+#define FX3_PIN         0 /*Pin 11*/
 #define FX2_PIN         2 /*Pin 13*/
 #define FX1_PIN         3 /*Pin 15*/
 #define VOLUME_PIN     23 /*Pin 33*/
@@ -22,8 +22,12 @@
 #define GATE_PIN       27 /*Pin 36*/
 #define REVERB_PIN     28 /*Pin 38*/
 #define WAH_PIN        29 /*Pin 40*/
-#define BANK_UP_PIN     0 /*1 /*Pin 12*/
+#define BANK_UP_PIN     1 /*Pin 12*/
 #define BANK_DOWN_PIN   4 /*Pin 16*/
+#define A_PIN           0 /*Pin ? */
+#define B_PIN           0 /*Pin ? */
+#define C_PIN           0 /*Pin ? */
+#define D_PIN           0 /*Pin ? */
 
 /// Used to debounce the buttons
 #define DEBOUNCE_DELAY 100 /*100 ms*/
@@ -51,7 +55,7 @@ int main(int argc, char *argv[])
           //poll the gpio and add to command queue
           bool b_event = gpio_to_fbv3_effect(false);
 
-          // poor debounce
+          // poor man's debounce
           if(b_event)
           {
               delay(DEBOUNCE_DELAY);
@@ -84,6 +88,10 @@ void setup_gpio()
     pinMode(WAH_PIN, INPUT);
     pinMode(BANK_UP_PIN, INPUT);
     pinMode(BANK_DOWN_PIN, INPUT);
+    pinMode(A_PIN, INPUT);
+    pinMode(B_PIN, INPUT);
+    pinMode(C_PIN, INPUT);
+    pinMode(D_PIN, INPUT);
 
     // use pull ups, no floating pins
     pullUpDnControl(FX3_PIN, PUD_DOWN);
@@ -97,6 +105,10 @@ void setup_gpio()
     pullUpDnControl(WAH_PIN, PUD_DOWN);
     pullUpDnControl(BANK_UP_PIN, PUD_DOWN);
     pullUpDnControl(BANK_DOWN_PIN, PUD_DOWN);
+    pullUpDnControl(A_PIN, PUD_DOWN);
+    pullUpDnControl(B_PIN, PUD_DOWN);
+    pullUpDnControl(C_PIN, PUD_DOWN);
+    pullUpDnControl(D_PIN, PUD_DOWN);
 }
 
 /// @brief Handle GPIO presses 
@@ -151,6 +163,10 @@ bool gpio_to_fbv3_effect(bool latching)
     ret |= gpio_process(WAH_PIN, EFFECTS_WAH, &p_fbv3_states->wah_state, latching);
     ret |= gpio_process(BANK_UP_PIN, EFFECTS_BANK_UP, &p_fbv3_states->bank_up_state, latching);
     ret |= gpio_process(BANK_DOWN_PIN, EFFECTS_BANK_DOWN, &p_fbv3_states->bank_down_state, latching);
+    ret |= gpio_process(A_PIN, EFFECTS_A, &p_fbv3_states->a_state, latching);
+    ret |= gpio_process(B_PIN, EFFECTS_B, &p_fbv3_states->b_state, latching);
+    ret |= gpio_process(C_PIN, EFFECTS_C, &p_fbv3_states->c_state, latching);
+    ret |= gpio_process(D_PIN, EFFECTS_D, &p_fbv3_states->d_state, latching);
 
     return ret;
 }
