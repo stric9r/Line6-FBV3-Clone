@@ -129,7 +129,7 @@ static unsigned char bank_msg2[BANK_40_SZ] = {0x04, 0xF0, 0x00, 0x01,
 
 /*variables*/
 
-/// Used for printts,  lines up with enum effects
+/// Used for prints,  lines up with enum effects
 static char const * const effects_strings[EFFECTS_MAX] = 
 {
   "NONE",

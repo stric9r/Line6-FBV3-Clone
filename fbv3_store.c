@@ -39,6 +39,24 @@ static int8_t current_bank = 0;
 /*function prototypes*/
 bool fbv3_store_get_data_from_file(char * p_param, int32_t * p_val);
 bool fbv3_store_set_data_to_file(char * p_param, int32_t val);
+void print_storage(void);
+
+void print_storage(void)
+{
+
+   fprintf(stderr, "BUFFER\n");
+   fprintf(stderr, "%s\n", buffer);
+   
+   fprintf(stderr, "STORAGE\n");
+   for(int i = 0; i < PARAM_MAX; i++)
+   {
+       if(storage[i][0] != 0)
+       {
+         fprintf(stderr, "%s\n", storage[i]);
+       }
+   }
+  
+}
 
 /// @brief Get configuration data from storage file.
 ///        Will populate pedal for use with stored config data.
@@ -48,7 +66,8 @@ void fbv3_store_init(void)
 
     // make sure storage is empty
     memset(storage, 0, (PARAM_MAX * PARAM_SIZE)*sizeof(char));
-
+    memset(buffer, 0, (BUFFER_SIZE)*sizeof(char));
+  
     int32_t data = 0;
     if(fbv3_store_get_data_from_file(PARAM_PRESET, &data))
     {
@@ -144,6 +163,7 @@ bool fbv3_store_get_data_from_file(char * p_param, int32_t * p_val)
     // file open, get the data
     if(buffer_read)
     {
+
         // process 1st token
         char * token;
         token = strtok(buffer, "\n");
@@ -152,9 +172,10 @@ bool fbv3_store_get_data_from_file(char * p_param, int32_t * p_val)
         int32_t param_idx = 0;
         while(token != NULL)
         {
+
             bool found = false;
             //get it
-            sscanf(token, "%s %d", param_name, param_val);
+            sscanf(token, "%s %d", param_name, &param_val);
 
             // is there a match?
             if(strncmp(param_name, p_param, sizeof(param_name)/sizeof(char)) == 0)
@@ -173,7 +194,9 @@ bool fbv3_store_get_data_from_file(char * p_param, int32_t * p_val)
             token = strtok(NULL, "\n");
         }
     }
-
+    
+    print_storage();
+    
     return ret_val;
 }
 
@@ -206,7 +229,7 @@ bool fbv3_store_set_data_to_file(char * p_param, int32_t val)
         if(storage[i][0] != 0)
         {
             // is this the param?
-            sscanf(&storage[i][0], "%s %d", param_name, param_val);
+            sscanf(&storage[i][0], "%s %d", param_name, &param_val);
             if(strncmp(param_name, p_param, sizeof(param_name)/sizeof(char)) == 0)
             {
                 // clear it
