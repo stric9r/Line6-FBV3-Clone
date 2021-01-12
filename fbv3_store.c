@@ -11,8 +11,11 @@
 #define FBV_STORE_FILE_NAME "fbv3_storage"
 
 /// Sizes of buffer and params
-#define BUFFER_SIZE 256
+#define BUFFER_SIZE 2048
+#define PARAM_MAX 64 /*2048 buffer / 32 param size = 64 params total*/
 #define PARAM_SIZE 32
+#define PARAM_NAME_SIZE 16
+#define PARAM_VALUE_SIZE 16
 
 /// Params in the file
 #define PARAM_PRESET "preset"
@@ -21,6 +24,15 @@
 
 
 /*variables*/
+
+/// file buffer
+static char buffer[BUFFER_SIZE];
+static bool buffer_read = false;
+
+/// local storage
+static char storage[PARAM_MAX][PARAM_SIZE];
+
+/// params broken out for use
 static int8_t current_preset = 0;
 
 /*function prototypes*/
@@ -30,6 +42,11 @@ bool fbv3_store_set_data_to_file(char * p_param, int32_t val);
 /// @brief 
 void fbv3_store_init(void)
 {
+    buffer_read = false;
+
+    //empty storage
+    memset(storage, 0, (PARAM_MAX * PARAM_SIZE)*sizeof(char));
+
     int32_t data = 0;
     if(fbv3_store_get_data_from_file(PARAM_PRESET, &data))
     {
@@ -59,12 +76,13 @@ void fbv3_store_set_preset(int8_t preset)
 }
 
 
-/// @brief Opens file and gets specified param
+/// @brief Opens file on startup and gets specified params.
+///        Puts them in local storage buffers.
 ///        Each line format is like (example):
 ///
-///        preset 5 
-///        other  2
-///        data   3
+///        preset 5\n
+///        other 2\n
+///        data 3\n
 ///
 ///        Just the param name, a space, then the number
 ///
@@ -74,42 +92,68 @@ void fbv3_store_set_preset(int8_t preset)
 /// @return True if param found and set in p_val
 bool fbv3_store_get_data_from_file(char * p_param, int32_t * p_val)
 {
-    FILE *fp = NULL;
-    char buffer[BUFFER_SIZE];
-    char param_name[PARAM_SIZE];
+    char param_name[PARAM_NAME_SIZE];
     int32_t param_val = 0;
     bool ret_val = false;
 
-    fp = fopen(FBV_STORE_FILE_NAME, "r");
+    // only read the file at startup
+    if(!buffer_read)
+    {
+        FILE *fp = NULL;
+
+        // file open, get the data
+        fp = fopen(FBV_STORE_FILE_NAME, "r");
+        if(fp != NULL)
+        {
+            // read the whole file into
+            fread(buffer, sizeof(char), BUFFER_SIZE, fp);
+            fclose(fp);
+            buffer_read = true;
+        }
+        else
+        {
+            fprintf(stderr, "storage file not found\n");
+        }
+    }
 
     // file open, get the data
-    if(fp != NULL)
+    if(buffer_read)
     {
-        while(fgets(buffer, BUFFER_SIZE, fp) != NULL)
+        // process 1st token
+        char * token;
+        token = strtok(buffer, "\n");
+
+        // walk through other tokens */
+        int32_t param_idx = 0;
+        while(token != NULL)
         {
-            sscanf(buffer, "%s %d", param_name, &param_val);
+            bool found = false;
+            //get it
+            sscanf(token, "%s %d", param_name, param_val);
 
-            /// found
-            if(strncmp(buffer, p_param, sizeof(p_param)) == 0)
+            // is there a match?
+            if(strncmp(param_name, p_param, sizeof(param_name)/sizeof(char)) == 0)
             {
-                *p_val = param_val;
-
-                ret_val = true;
-                break;
+                *p_val = (int32_t)param_val;
+                found = true;
             }
-        }
 
-        fclose(fp);
-    }
-    else
-    {
-        fprintf(stderr, "storage file not found\n");
+            //store for later use
+            if(found && param_idx < PARAM_MAX)
+            {
+                strncpy(&storage[param_idx++][0], token, sizeof(token));
+            }
+
+            //get next token on new line
+            token = strtok(NULL, "\n");
+        }
     }
 
     return ret_val;
 }
 
-/// @brief Opens file and sets specified param data
+/// @brief Sets param data in local storage.
+///        If storage update, file is written.
 ///        Each line format is like (example):
 ///
 ///        preset 5 
@@ -125,39 +169,50 @@ bool fbv3_store_get_data_from_file(char * p_param, int32_t * p_val)
 bool fbv3_store_set_data_to_file(char * p_param, int32_t val)
 {
     FILE *fp = NULL;
-    char buffer[BUFFER_SIZE];
     char param_name[PARAM_SIZE];
     int8_t param_val = 0;
     bool ret_val = false;
 
-    fp = fopen(FBV_STORE_FILE_NAME, "r+");
-
-    // file open, set the data
-    if(fp != NULL)
+    // find param in storage
+    bool found = false;
+    for(int32_t i = 0; i < PARAM_MAX; i++)
     {
-        rewind(fp); //start of file
-    
-        while(fgets(buffer, BUFFER_SIZE, fp) != NULL)
+        // is there something there?
+        if(storage[i][0] != 0)
         {
-            sscanf(buffer, "%s %d", param_name, &param_val);
-
-            /// found, write line
-            if(strncmp(buffer, p_param, sizeof(p_param)) == 0)
+            // is this the param?
+            sscanf(&storage[i][0], "%s %d", param_name, param_val);
+            if(strncmp(param_name, p_param, sizeof(param_name)/sizeof(char)) == 0)
             {
-                sprintf(&buffer[0], "%s %d", p_param, val);
-                fputs(buffer, fp);
+                // clear it
+                memset(&storage[i][0], 0, PARAM_SIZE * sizeof(char));
 
-                ret_val = true;
-                break;
+                // format it and write it
+                snprintf(&storage[i][0], PARAM_SIZE * sizeof(char), "%s %d\n", p_param, val);
+            
+                found = true;
+                break; //done
             }
         }
-        
-        fclose(fp);
-    }
-    else
-    {
-        fprintf(stderr, "storage file not found\n");
     }
 
+    // only write out file if found param
+    if(found)
+    {
+        fp = fopen(FBV_STORE_FILE_NAME, "w");
+
+        // file open, set the data
+        if(fp != NULL)
+        {        
+            // quicker to just write the whole thing, file is small
+            fwrite(storage, sizeof(char), (PARAM_MAX * PARAM_SIZE) * sizeof(char), fp);
+            fclose(fp);
+            ret_val = true;
+        }
+        else
+        {
+            fprintf(stderr, "storage file not found\n");
+        }
+    }
     return ret_val;
 }
