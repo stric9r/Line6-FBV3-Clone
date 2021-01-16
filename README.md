@@ -32,6 +32,9 @@ sudo dpkg -i wiringpi-latest.deb
 ## Building using GCC
 gcc -o fbv3 main.c fbv3_store.c fbv3.c -lwiringPi -lusb-1.0
 
+## Execution
+Make sure to run with root access.
+
 ## File descriptions
 ### fbv3_clone.c
 ### fbv3_clone.h
