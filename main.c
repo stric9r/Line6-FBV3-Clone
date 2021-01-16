@@ -13,17 +13,17 @@
 
 /// Mapping to wPi from raspberry pi 4b and pi zero w pinout on header
 /// Mapping can be seen by running command "gpio readall"
-#define FX3_PIN        25 /* 0 /*Pin 11*/
-#define FX2_PIN        25 /* 2 /*Pin 13*/
-#define FX1_PIN        25 /* 3 /*Pin 15*/
+#define FX3_PIN        0 /*Pin 11*/
+#define FX2_PIN        2 /*Pin 13*/
+#define FX1_PIN        3 /*Pin 15*/
 #define VOLUME_PIN     23 /*Pin 33*/
 #define COMPRESSOR_PIN 24 /*Pin 35*/
 #define EQUALIZER_PIN  25 /*Pin 37*/
 #define GATE_PIN       27 /*Pin 36*/
 #define REVERB_PIN     28 /*Pin 38*/
 #define WAH_PIN        29 /*Pin 40*/
-#define BANK_UP_PIN     2  /* 1 /*Pin 12*/
-#define BANK_DOWN_PIN   3  /* 4 /*Pin 16*/
+#define BANK_UP_PIN     1 /*Pin 12*/
+#define BANK_DOWN_PIN   4 /*Pin 16*/
 #define A_PIN           25 /*Pin ? */
 #define B_PIN           25 /*Pin ? */
 #define C_PIN           25 /*Pin ? */
