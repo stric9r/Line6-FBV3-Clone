@@ -25,7 +25,8 @@ enum effects
     EFFECTS_B,
     EFFECTS_C,
     EFFECTS_D,
-    EFFECTS_MAX
+    EFFECTS_PRESET_INIT,
+    EFFECTS_MAX,
 };
 
 /// Keeps the current state of the effects on/off

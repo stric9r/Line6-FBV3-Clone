@@ -54,6 +54,11 @@ If moving to a different platform, the changes only need to be done here.
 
 
 
-
+### fbv3_store.c
+### fbv3_store.h
+Reads in and writes to binary file store.bin.
+This file holds the configuration settings for the application.
+In any event that store.bin is corrupted, copy default.bin as store.bin to get default settings back.
+ 
 
 

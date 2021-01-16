@@ -10,22 +10,26 @@
 #include <libusb-1.0/libusb.h>
 
 
+#define PRESETS_PER_BANK 4
+#define PRESET_A_OFFSET 0
+#define PRESET_B_OFFSET 1
+#define PRESET_C_OFFSET 2
+#define PRESET_D_OFFSET 3
 
 /*enums and structs*/
 
 /// State machine states for commnication with L6 Spider V Amp
 enum comm_state
 {
-    COMM_STATE_CONNECT,    /// On first connection, only used once per session
-    COMM_STATE_AUTH1,      /// After first connection, authenicate 1 - 3, only used once per session
+    COMM_STATE_CONNECT,     /// On first connection, only used once per session
+    COMM_STATE_AUTH1,       /// After first connection, authenicate 1 - 3, only used once per session
     COMM_STATE_AUTH2,
     COMM_STATE_AUTH3, 
-    COMM_STATE_WAIT,       /// Wait for action from IO
-    COMM_STATE_CTRL1,      /// Control hello msg sent before every control command
-    COMM_STATE_CTRL2,      /// Control command then back to wait state
-    COMM_STATE_BANK_UP1,   /// Bank up/down command then back to wait state
-    COMM_STATE_BANK_DOWN1,
-    COMM_STATE_BANK2,      /// Complete bank message
+    COMM_STATE_WAIT,        /// Wait for action from IO
+    COMM_STATE_CTRL1,       /// Control hello msg sent before every control command
+    COMM_STATE_CTRL2,       /// Control command then back to wait state
+    COMM_STATE_BANK_PRESET1,
+    COMM_STATE_BANK_PRESET2,/// Complete bank message
     COMM_STATE_MAX,
 };
 
@@ -39,6 +43,7 @@ struct command
 
 // Preset number used to iterate through presets with bank command (up or down)
 static int8_t preset_num_store = 0;
+static int8_t bank_num_store = 0;
 
 /*global arrays*/
 static struct command commands_to_process[CMD_MAX_SZ]; /// Storage for commands set by user input
@@ -105,7 +110,7 @@ static unsigned char ctrl_msg2 [CTRL_52_SZ] = {0x04, 0xf0, 0x00, 0x01,
                                                0x04, 0x00, 0x00, 0x00, 
                                                0x05, 0xf7, 0x00, 0x00};
 
-static unsigned char bank_msg1[BANK_40_SZ] = {0x04, 0xF0, 0x00, 0x01,
+static unsigned char preset_msg1[BANK_40_SZ] = {0x04, 0xF0, 0x00, 0x01,
                                               0x04, 0x0C, 0x22, 0x00,
                                               0x04, 0x4D, 0x01, 0x00,
                                               0x04, 0x00, 0x00, 0x0B,
@@ -116,7 +121,7 @@ static unsigned char bank_msg1[BANK_40_SZ] = {0x04, 0xF0, 0x00, 0x01,
                                               0x04, 0x00, 0x00, 0x00,
                                               0x06, 0x00, 0xF7, 0x00};
 
-static unsigned char bank_msg2[BANK_40_SZ] = {0x04, 0xF0, 0x00, 0x01,
+static unsigned char preset_msg2[BANK_40_SZ] = {0x04, 0xF0, 0x00, 0x01,
                                               0x04, 0x0C, 0x22, 0x00,
                                               0x04, 0x4D, 0x01, 0x01,
                                               0x04, 0x00, 0x00, 0x0B,
@@ -144,6 +149,11 @@ static char const * const effects_strings[EFFECTS_MAX] =
   "WAH",
   "BANK_UP",
   "BANK_DOWN",
+  "PRESET_A",
+  "PRESET_B",
+  "PRESET_C",
+  "PRESET_D",
+  "PRESET_INIT",
 };
 
 /// Used for usb enumeration / control
@@ -159,6 +169,7 @@ static bool fpv_clone_ready = false;  /// Used to signal the pedal can take comm
 static enum comm_state fbv3_process_commands(void);
 static void fbv3_print_msg_data(const uint8_t* data, const size_t size, const char * description);
 static void fbv3_print_usb_error(const int16_t error);
+static void fbv3_set_preset(enum effects effect);
 
 /// @brief Initialize the fbv3 interface over USB.
 ///        This handles enumeration, configuration, and kernal detatchment.
@@ -169,6 +180,7 @@ bool fbv3_init(void)
     // Get parameters stored in file
     fbv3_store_init();
     preset_num_store = fbv3_store_get_preset();
+    bank_num_store = fbv3_store_get_bank();
 
     int16_t status = LIBUSB_ERROR_OTHER; 
 
@@ -240,11 +252,8 @@ bool fbv3_init(void)
     // Force to bank read from storage file, in command queue
     if(status == LIBUSB_SUCCESS)
     {
-        //this is a bit of a hack.
-        //decemrent the preset internally, then simulate a bank up command.
-        //if the storage file doesn't exist, nothing will happen.
-        preset_num_store = preset_num_store - 1;
-        fbv3_update_effect_switch(EFFECTS_BANK_UP, true);
+        //init the bank/preset
+        fbv3_update_effect_switch(EFFECTS_PRESET_INIT, false);
     }
 
     return status == LIBUSB_SUCCESS ? true : false;
@@ -365,26 +374,17 @@ bool fbv3_process(void)
 
             state = COMM_STATE_WAIT; //force back into wait to process next message
             break;
-        case COMM_STATE_BANK_UP1:
-            buff_out = bank_msg1;
+        case COMM_STATE_BANK_PRESET1:
+            buff_out = preset_msg1;
             buff_out_sz = BANK_40_SZ;
-            strcpy(description, "BANK_UP MSG");
+            strcpy(description, "BANK_PRESET MSG");
 
-            state = COMM_STATE_BANK2;
+            state = COMM_STATE_BANK_PRESET2;
             break;
-        case COMM_STATE_BANK_DOWN1:
-            buff_out = bank_msg1;
-            buff_out_sz = BANK_40_SZ;
-            strcpy(description, "BANK_DOWN MSG");
-
-            state = COMM_STATE_BANK2;
-            break;
-        case COMM_STATE_BANK2:
-          buff_out = bank_msg2;
+        case COMM_STATE_BANK_PRESET2:
+          buff_out = preset_msg2;
           buff_out_sz = BANK_40_SZ;
           strcpy(description, "BANK2 MSG");
-          
-          fbv3_store_set_preset(preset_num_store);
           
           state = COMM_STATE_WAIT; //force back into wait to process next message
         default:
@@ -424,7 +424,13 @@ bool fbv3_process(void)
 void fbv3_update_effect_switch(enum effects effect, /// effect to add 
                                bool on_off)         /// effect on/off state
 {
-    if( effect != EFFECTS_BANK_UP && effect != EFFECTS_BANK_DOWN)
+    if( effect != EFFECTS_BANK_UP && 
+        effect != EFFECTS_BANK_DOWN &&
+        effect != EFFECTS_A &&
+        effect != EFFECTS_B &&
+        effect != EFFECTS_C &&
+        effect != EFFECTS_D &&
+        effect != EFFECTS_PRESET_INIT)
     {
         fprintf(stderr, "adding command effect %s state %d\n", effects_strings[effect], (int)on_off);
 
@@ -436,55 +442,79 @@ void fbv3_update_effect_switch(enum effects effect, /// effect to add
     }
     else
     {
-        if(effect == EFFECTS_BANK_UP)
-        {
-            fbv3_increment_preset(); //will increment command index
-        }
-        else
-        {
-            fbv3_decrement_preset(); //will increment command index
-        }
-        
+        fbv3_set_preset(effect);
     }
     
 }
 
-/// @brief Adds command to increment to next preset
-void fbv3_increment_preset(void)
+/// @brief Adds command to change presets
+static void fbv3_set_preset(enum effects effect)
 {
-    //increment preset number
-    preset_num_store++;
-    if(preset_num_store > PRESET_END)
+    //get the offset
+    int8_t preset_offset = 0;
+    bool bank_update = false;
+    
+    switch(effect)
     {
-        preset_num_store = PRESET_START; //roll over
+      case EFFECTS_BANK_UP:
+        fprintf(stderr, "BANK UP1 - %d\n", bank_num_store); 
+        bank_num_store = (bank_num_store + 1) >= BANK_END ? BANK_START : (bank_num_store + 1);
+        fprintf(stderr, "BANK UP2 - %d\n", bank_num_store); 
+        bank_update = true;
+        break; 
+      case EFFECTS_BANK_DOWN:
+        fprintf(stderr, "BANK DOWN1 - %d\n", bank_num_store); 
+        bank_num_store = (bank_num_store - 1) < BANK_START ? (BANK_END-1) : (bank_num_store - 1); 
+        fprintf(stderr, "BANK DOWN2 - %d\n", bank_num_store); 
+        bank_update = true;
+        break;
+      case EFFECTS_A:
+        preset_offset = PRESET_A_OFFSET;
+        break;
+      case EFFECTS_B:
+        preset_offset = PRESET_B_OFFSET;
+        break;
+      case EFFECTS_C:
+        preset_offset = PRESET_C_OFFSET;
+        break;
+      case EFFECTS_D:
+        preset_offset = PRESET_D_OFFSET;
+        break;
+      default:
+        preset_offset = PRESET_A_OFFSET;
+        break;
     }
 
-    commands_to_process[command_index].effect = EFFECTS_BANK_UP;
+    //only calculate if not INIT
+    if(effect != EFFECTS_PRESET_INIT)
+    {
+      // bank command, updat the bank and get stored preset
+      if(bank_update)
+      {          
+          fbv3_store_set_bank(bank_num_store);
+          preset_num_store = fbv3_store_get_preset();
+          bank_update = true;
+      }
+      // Just a preset change, don't update the bank
+      else 
+      {
+          //get the current bank and add the offset
+          bank_num_store = fbv3_store_get_bank();
+          
+          // preset = bank * presets_per_bank + preset_offset
+          preset_num_store = (bank_num_store * PRESETS_PER_BANK) + preset_offset;
+          fbv3_store_set_preset(preset_num_store);
+      }
+    }
+    
+    // build the message
+    commands_to_process[command_index].effect = effect;
     commands_to_process[command_index].on_off = false; //dont care
     commands_to_process[command_index].preset_num = preset_num_store;
 
     command_index = (command_index + 1) % CMD_MAX_SZ; //next index number
 
-    fprintf(stderr, "incrementing preset to %d\n", preset_num_store);
-}
-
-/// @brief Adds command to decrement to next preset
-void fbv3_decrement_preset(void)
-{
-    //decrement preset number
-    preset_num_store--;
-    if(preset_num_store < PRESET_START)
-    {
-        preset_num_store = PRESET_END; //roll over
-    }
-
-    commands_to_process[command_index].effect = EFFECTS_BANK_DOWN;
-    commands_to_process[command_index].on_off = false; //dont care
-    commands_to_process[command_index].preset_num = preset_num_store;
-
-    command_index = (command_index + 1) % CMD_MAX_SZ; //next index number
-
-    fprintf(stderr, "decrementing preset to %d\n", preset_num_store);
+    fprintf(stderr, "setting bank %d to preset %d\n", bank_num_store, preset_num_store);
 }
 
 /// @breif Gets the structure that holds the current state of each effect pedal
@@ -566,14 +596,14 @@ static enum comm_state fbv3_process_commands(void)
                         ret = COMM_STATE_CTRL1;
                         break;
                     case EFFECTS_BANK_UP:
-                        bank_msg1[BANK_UP_DOWN_IDX] = preset;
-
-                        ret = COMM_STATE_BANK_UP1;
-                        break;
                     case EFFECTS_BANK_DOWN:
-                        bank_msg1[BANK_UP_DOWN_IDX] = preset;
-
-                        ret = COMM_STATE_BANK_DOWN1;
+                    case EFFECTS_A:
+                    case EFFECTS_B:
+                    case EFFECTS_C:
+                    case EFFECTS_D:
+                    case EFFECTS_PRESET_INIT:
+                        preset_msg1[PRESET_IDX] = preset;
+                        ret = COMM_STATE_BANK_PRESET1;
                         break;
                     default:
                         ret = COMM_STATE_WAIT;
