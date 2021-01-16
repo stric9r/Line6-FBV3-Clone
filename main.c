@@ -1,20 +1,21 @@
 //How to build
-//gcc -o fbv3 main.c fbv3_clone.c -lwiringPi -lusb-1.0
+//gcc -o fbv3 main.c fbv3_store.c fbv3.c -lwiringPi -lusb-1.0
 
 
-#include "fbv3_clone.h"
+#include "fbv3.h"
 #include <wiringPi.h>
 #include <stdio.h>
 #include <stdbool.h>
+#include <stdint.h>
 #include <unistd.h>
 
 /*defines*/
 
 /// Mapping to wPi from raspberry pi 4b and pi zero w pinout on header
 /// Mapping can be seen by running command "gpio readall"
-#define FX3_PIN         0 /*Pin 11*/
-#define FX2_PIN         2 /*Pin 13*/
-#define FX1_PIN         3 /*Pin 15*/
+#define FX3_PIN        0 /*Pin 11*/
+#define FX2_PIN        2 /*Pin 13*/
+#define FX1_PIN        3 /*Pin 15*/
 #define VOLUME_PIN     23 /*Pin 33*/
 #define COMPRESSOR_PIN 24 /*Pin 35*/
 #define EQUALIZER_PIN  25 /*Pin 37*/
@@ -23,6 +24,10 @@
 #define WAH_PIN        29 /*Pin 40*/
 #define BANK_UP_PIN     1 /*Pin 12*/
 #define BANK_DOWN_PIN   4 /*Pin 16*/
+#define A_PIN           25 /*Pin ? */
+#define B_PIN           25 /*Pin ? */
+#define C_PIN           25 /*Pin ? */
+#define D_PIN           25 /*Pin ? */
 
 /// Used to debounce the buttons
 #define DEBOUNCE_DELAY 100 /*100 ms*/
@@ -30,7 +35,7 @@
 /*prototypes*/
 void setup_gpio(void);
 bool gpio_to_fbv3_effect(bool latching);
-bool gpio_process(int pin, enum effects effect, int * p_state, bool latching);
+bool gpio_process(int pin, enum effects effect, int8_t * p_state, bool latching);
 
 /// @brief Main program entry
 int main(int argc, char *argv[])
@@ -50,7 +55,7 @@ int main(int argc, char *argv[])
           //poll the gpio and add to command queue
           bool b_event = gpio_to_fbv3_effect(false);
 
-          // poor debounce
+          // poor man's debounce
           if(b_event)
           {
               delay(DEBOUNCE_DELAY);
@@ -83,6 +88,10 @@ void setup_gpio()
     pinMode(WAH_PIN, INPUT);
     pinMode(BANK_UP_PIN, INPUT);
     pinMode(BANK_DOWN_PIN, INPUT);
+    pinMode(A_PIN, INPUT);
+    pinMode(B_PIN, INPUT);
+    pinMode(C_PIN, INPUT);
+    pinMode(D_PIN, INPUT);
 
     // use pull ups, no floating pins
     pullUpDnControl(FX3_PIN, PUD_DOWN);
@@ -96,6 +105,10 @@ void setup_gpio()
     pullUpDnControl(WAH_PIN, PUD_DOWN);
     pullUpDnControl(BANK_UP_PIN, PUD_DOWN);
     pullUpDnControl(BANK_DOWN_PIN, PUD_DOWN);
+    pullUpDnControl(A_PIN, PUD_DOWN);
+    pullUpDnControl(B_PIN, PUD_DOWN);
+    pullUpDnControl(C_PIN, PUD_DOWN);
+    pullUpDnControl(D_PIN, PUD_DOWN);
 }
 
 /// @brief Handle GPIO presses 
@@ -106,10 +119,10 @@ void setup_gpio()
 /// @param latching is the switch latching or momentary
 ///
 /// @return True if an event happened
-bool gpio_process(int pin, enum effects effect, int * p_state, bool latching)
+bool gpio_process(int pin, enum effects effect, int8_t * p_state, bool latching)
 {
     bool ret = false; 
-    int pin_state = digitalRead(pin);
+    int8_t pin_state = (int8_t)digitalRead(pin);
     
     if(latching  && (pin_state != *p_state))
     {
@@ -150,6 +163,10 @@ bool gpio_to_fbv3_effect(bool latching)
     ret |= gpio_process(WAH_PIN, EFFECTS_WAH, &p_fbv3_states->wah_state, latching);
     ret |= gpio_process(BANK_UP_PIN, EFFECTS_BANK_UP, &p_fbv3_states->bank_up_state, latching);
     ret |= gpio_process(BANK_DOWN_PIN, EFFECTS_BANK_DOWN, &p_fbv3_states->bank_down_state, latching);
+    ret |= gpio_process(A_PIN, EFFECTS_A, &p_fbv3_states->a_state, latching);
+    ret |= gpio_process(B_PIN, EFFECTS_B, &p_fbv3_states->b_state, latching);
+    ret |= gpio_process(C_PIN, EFFECTS_C, &p_fbv3_states->c_state, latching);
+    ret |= gpio_process(D_PIN, EFFECTS_D, &p_fbv3_states->d_state, latching);
 
     return ret;
 }

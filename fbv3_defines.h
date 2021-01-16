@@ -26,7 +26,7 @@
 #define PACKET_NUM_IDX   11
 #define PEDAL_TYPE_IDX   23
 #define PEDAL_ON_IDX     35
-#define BANK_UP_DOWN_IDX 30
+#define PRESET_IDX 30
 
 /// Pedal types, assigned at index PEDAL_TYPE_IDX
 #define PEDAL_TYPE_FX3        0x46
@@ -47,10 +47,14 @@
 #define PEDAL_OFF 0
 
 /// Max min preset number 
-#define PRESET_START 0x00
-#define PRESET_END 0x7E
+#define PRESET_START 0
+#define PRESET_END 128
+#define BANK_START 0
+#define BANK_END 32
 
 /// Command array size 
 #define CMD_MAX_SZ 10
+
+#define FBV_STORE_FILE
 
 #endif //FBV3_DEFINES_H

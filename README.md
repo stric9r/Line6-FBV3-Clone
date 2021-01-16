@@ -30,7 +30,7 @@ wget https://project-downloads.drogon.net/wiringpi-latest.deb
 sudo dpkg -i wiringpi-latest.deb
 
 ## Building using GCC
-gcc -o fbv3 main.c fbv3_clone.c -lwiringPi -lusb-1.0
+gcc -o fbv3 main.c fbv3_store.c fbv3.c -lwiringPi -lusb-1.0
 
 ## File descriptions
 ### fbv3_clone.c
@@ -54,6 +54,11 @@ If moving to a different platform, the changes only need to be done here.
 
 
 
-
+### fbv3_store.c
+### fbv3_store.h
+Reads in and writes to binary file store.bin.
+This file holds the configuration settings for the application.
+In any event that store.bin is corrupted, copy default.bin as store.bin to get default settings back.
+ 
 
 
