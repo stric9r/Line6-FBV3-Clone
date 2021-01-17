@@ -1,8 +1,7 @@
 #include "fbv3.h"
 #include "fbv3_store.h"
 #include "fbv3_defines.h"
-
-#include <stdio.h>
+#include "debug.h"
 #include <stdbool.h>
 #include <string.h>
 #include <unistd.h>
@@ -199,7 +198,7 @@ bool fbv3_init(void)
         libusb_set_option(p_context, LIBUSB_OPTION_LOG_LEVEL, LIBUSB_LOG_LEVEL_INFO);
 
         p_handle = libusb_open_device_with_vid_pid(p_context, L6_VID, L6_PID);  
-        fprintf(stderr, "fbv3 usb handle 0x%x\n", p_handle);
+        debug_print( "USB handle 0x%x\n", p_handle);
       
       if(NULL != p_handle)
       { 
@@ -209,43 +208,43 @@ bool fbv3_init(void)
         //must check all interfaces and detatch from kernel to configure
         for(int intf = 0; intf <= L6_TOTAL_INTERFACES; intf++)
         {
-            fprintf(stderr, "\ninterface %d:\n", intf);
+            debug_print( "\nUSB Interface %d:\n", intf);
             int16_t active = libusb_kernel_driver_active(p_handle, intf);
             if(1 == active)
             {
-                fprintf(stderr, "   -kernel driver attached\n");
+                debug_print( "   -kernel driver attached\n");
                 
                 status = libusb_detach_kernel_driver(p_handle, intf);
                 if(LIBUSB_SUCCESS == status)
                 {
-                    fprintf(stderr, "   -kernel driver detatched\n");
+                    debug_print( "   -kernel driver detatched\n");
                 }
                 else
                 {
-                    fprintf(stderr, "   -kernel driver detatch failed\n");
+                    debug_print( "   -kernel driver detatch failed\n");
                     fbv3_print_usb_error(status); 
                 }
             }
             else
             {
-                fprintf(stderr, "   -kernel driver not attached %d\n", active);
+                debug_print( "   -kernel driver not attached %d\n", active);
             }
         }
 
         status = libusb_set_configuration(p_handle, L6_CONFIGURATION);
-        fprintf(stderr, "\nset configuration\n");
+        debug_print( "\nUSB set configuration\n");
         fbv3_print_usb_error(status);
 
         status = libusb_claim_interface(p_handle, L6_INTERFACE);  
-        fprintf(stderr, "claim interface\n");
+        debug_print( "USB claim interface\n");
         fbv3_print_usb_error(status);
 
-        fprintf(stderr, "success: config %d, Interface %d\n", L6_CONFIGURATION, L6_INTERFACE);
+        debug_print( "USB Success: config %d, Interface %d\n", L6_CONFIGURATION, L6_INTERFACE);
       }
       else
       {
           status = LIBUSB_ERROR_OTHER;
-          fprintf(stderr, "there was a problem getting handle ret status  %d, handle %d\n", status, p_handle);
+          debug_print( "USB There was a problem getting handle ret status  %d, handle %d\n", status, p_handle);
       }
     }
     
@@ -279,7 +278,7 @@ bool fbv3_process(void)
 
     if( NULL == p_handle)
     {
-        fprintf(stderr, "device handle is NULL\n");
+        debug_print( "USB device handle is NULL\n");
         return LIBUSB_ERROR_OTHER;
     }
 
@@ -308,8 +307,8 @@ bool fbv3_process(void)
       //we got some data
       if(LIBUSB_SUCCESS == ret)
       {
-          fbv3_print_msg_data(buff_in, bytes_rx_tx, "INPUT");  
-          fprintf(stderr, "received %d\n", bytes_rx_tx);
+          fbv3_print_msg_data(buff_in, bytes_rx_tx, "USB INPUT");  
+          debug_print( "USB received %d\n", bytes_rx_tx);
           fbv3_print_usb_error(ret);
           
           //todo do something with data when you know what it is
@@ -411,7 +410,7 @@ bool fbv3_process(void)
                                    L6_TIMEOUT_OUT);  //timeout (ms)
     
         
-        fprintf(stderr, "size %d sent %d\n", buff_out_sz, bytes_rx_tx);
+        debug_print( "USB output size %d sent %d\n", buff_out_sz, bytes_rx_tx);
         
         fbv3_print_usb_error(ret);
     }
@@ -432,7 +431,7 @@ void fbv3_update_effect_switch(enum effects effect, /// effect to add
         effect != EFFECTS_D &&
         effect != EFFECTS_PRESET_INIT)
     {
-        fprintf(stderr, "adding command effect %s state %d\n", effects_strings[effect], (int)on_off);
+        debug_print( "Adding command effect %s state %d\n", effects_strings[effect], (int)on_off);
 
         commands_to_process[command_index].effect = effect;
         commands_to_process[command_index].on_off = on_off;
@@ -457,15 +456,11 @@ static void fbv3_set_preset(enum effects effect)
     switch(effect)
     {
       case EFFECTS_BANK_UP:
-        fprintf(stderr, "BANK UP1 - %d\n", bank_num_store); 
         bank_num_store = (bank_num_store + 1) >= BANK_END ? BANK_START : (bank_num_store + 1);
-        fprintf(stderr, "BANK UP2 - %d\n", bank_num_store); 
         bank_update = true;
         break; 
       case EFFECTS_BANK_DOWN:
-        fprintf(stderr, "BANK DOWN1 - %d\n", bank_num_store); 
         bank_num_store = (bank_num_store - 1) < BANK_START ? (BANK_END-1) : (bank_num_store - 1); 
-        fprintf(stderr, "BANK DOWN2 - %d\n", bank_num_store); 
         bank_update = true;
         break;
       case EFFECTS_A:
@@ -514,7 +509,7 @@ static void fbv3_set_preset(enum effects effect)
 
     command_index = (command_index + 1) % CMD_MAX_SZ; //next index number
 
-    fprintf(stderr, "setting bank %d to preset %d\n", bank_num_store, preset_num_store);
+    debug_print( "Setting bank %d to preset %d\n", bank_num_store, preset_num_store);
 }
 
 /// @breif Gets the structure that holds the current state of each effect pedal
@@ -610,12 +605,12 @@ static enum comm_state fbv3_process_commands(void)
                         break;
                 }
 
-                fprintf(stderr, "got command %d! effect %s state %d, preset %d \n", i, effects_strings[effect], (int)state, preset);
+                debug_print( "Got command %d! effect %s state %d, preset %d \n", i, effects_strings[effect], (int)state, preset);
             }
             else
             {
                 ret = COMM_STATE_WAIT;
-                fprintf(stderr, "unknown effect type 0x%x", (int)effect);
+                debug_print( "Unknown effect type 0x%x", (int)effect);
             }
 
             break;
@@ -631,8 +626,8 @@ void fbv3_print_msg_data(
     const size_t size,         /// size of message data
     const char * description)  /// string description of message data
 {
-    
-    fprintf(stderr, "\n%s:\n", description);
+#if(DEBUG)
+    debug_print( "\n%s:\n", description);
     
     size_t i = 0;
     for(i = 0; i < size; i++)
@@ -640,76 +635,78 @@ void fbv3_print_msg_data(
         //only 4 bytes per row (command/params 4 bytes each)
         if(0 == (i % 4))
         {
-          fprintf(stderr, "\n");
+          debug_print( "\n");
         }
         
-        fprintf(stderr, "0x%02x ", data[i]);
+        debug_print( "0x%02x ", data[i]);
     }
     
-    fprintf(stderr, "\n");
+    debug_print( "\n");
+#endif //DEBUG
 }
 
 
 /// @brief Print out readable format of usb error return code, used for debugging.
 void fbv3_print_usb_error(int16_t error) /// usb error code
 {
-    fprintf(stderr, "usb result code: ");
+#if(DEBUG)
+    debug_print( "USB result code: ");
     switch(error)
     {
         case LIBUSB_SUCCESS:
-            fprintf(stderr, "SUCCESS\n");
+            debug_print( "SUCCESS\n");
             break;
         case LIBUSB_ERROR_IO:
-            fprintf(stderr, "LIBUSB_ERROR_IO\n");
+            debug_print( "LIBUSB_ERROR_IO\n");
             break;
         case LIBUSB_ERROR_INVALID_PARAM:
-            fprintf(stderr, "LIBUSB_ERROR_INVALID_PARAM\n");
+            debug_print( "LIBUSB_ERROR_INVALID_PARAM\n");
             break;
         case LIBUSB_ERROR_ACCESS:
-            fprintf(stderr, "LIBUSB_ERROR_ACCESS\n");
+            debug_print( "LIBUSB_ERROR_ACCESS\n");
             break;
         case LIBUSB_ERROR_NO_DEVICE:
-            fprintf(stderr, "LIBUSB_ERROR_NO_DEVICE\n");
+            debug_print( "LIBUSB_ERROR_NO_DEVICE\n");
             break;
         case LIBUSB_ERROR_NOT_FOUND:
-            fprintf(stderr, "LIBUSB_ERROR_NOT_FOUND\n");
+            debug_print( "LIBUSB_ERROR_NOT_FOUND\n");
             break;
         case LIBUSB_ERROR_BUSY:
-            fprintf(stderr, "LIBUSB_ERROR_BUSY\n");
+            debug_print( "LIBUSB_ERROR_BUSY\n");
             break;
         case LIBUSB_ERROR_TIMEOUT:
-            fprintf(stderr, "LIBUSB_ERROR_TIMEOUT\n");
+            debug_print( "LIBUSB_ERROR_TIMEOUT\n");
             break;
         case LIBUSB_ERROR_OVERFLOW:
-            fprintf(stderr, "LIBUSB_ERROR_OVERFLOW\n");
+            debug_print( "LIBUSB_ERROR_OVERFLOW\n");
             break;
         case LIBUSB_ERROR_PIPE:
-            fprintf(stderr, "LIBUSB_ERROR_PIPE\n");
+            debug_print( "LIBUSB_ERROR_PIPE\n");
             break;
         case LIBUSB_ERROR_INTERRUPTED:
-            fprintf(stderr, "LIBUSB_ERROR_INTERRUPTED\n");
+            debug_print( "LIBUSB_ERROR_INTERRUPTED\n");
             break;
         case LIBUSB_ERROR_NO_MEM:
-            fprintf(stderr, "LIBUSB_ERROR_NO_MEM\n");
+            debug_print( "LIBUSB_ERROR_NO_MEM\n");
             break;
         case LIBUSB_ERROR_NOT_SUPPORTED:
-            fprintf(stderr, "LIBUSB_ERROR_NOT_SUPPORTED\n");
+            debug_print( "LIBUSB_ERROR_NOT_SUPPORTED\n");
             break;
         case LIBUSB_ERROR_OTHER:
-            fprintf(stderr, "LIBUSB_ERROR_OTHER\n");
+            debug_print( "LIBUSB_ERROR_OTHER\n");
             break;
         default:
-            fprintf(stderr, "Unknown LIBUSB_ERROR %d\n", error);
+            debug_print( "Unknown LIBUSB_ERROR %d\n", error);
             break;
     }
     
-    fprintf(stderr,"\n");
+    debug_print("\n");
+#endif //DEBUG
 }
 
 /// @brief Clean up usb handle
 void fbv3_close(void)
 {
-    fprintf(stderr, "\n");
     if(NULL != p_handle)
     {
         libusb_release_interface(p_handle, L6_INTERFACE);
