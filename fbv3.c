@@ -2,7 +2,6 @@
 #include "fbv3_store.h"
 #include "fbv3_defines.h"
 #include "debug.h"
-#include <stdio.h>
 #include <stdbool.h>
 #include <string.h>
 #include <unistd.h>
