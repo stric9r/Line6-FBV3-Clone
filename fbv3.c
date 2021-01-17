@@ -199,7 +199,7 @@ bool fbv3_init(void)
         libusb_set_option(p_context, LIBUSB_OPTION_LOG_LEVEL, LIBUSB_LOG_LEVEL_INFO);
 
         p_handle = libusb_open_device_with_vid_pid(p_context, L6_VID, L6_PID);  
-        debug_print( "fbv3 usb handle 0x%x\n", p_handle);
+        debug_print( "USB handle 0x%x\n", p_handle);
       
       if(NULL != p_handle)
       { 
@@ -209,7 +209,7 @@ bool fbv3_init(void)
         //must check all interfaces and detatch from kernel to configure
         for(int intf = 0; intf <= L6_TOTAL_INTERFACES; intf++)
         {
-            debug_print( "\ninterface %d:\n", intf);
+            debug_print( "\nUSB Interface %d:\n", intf);
             int16_t active = libusb_kernel_driver_active(p_handle, intf);
             if(1 == active)
             {
@@ -233,19 +233,19 @@ bool fbv3_init(void)
         }
 
         status = libusb_set_configuration(p_handle, L6_CONFIGURATION);
-        debug_print( "\nset configuration\n");
+        debug_print( "\nUSB set configuration\n");
         fbv3_print_usb_error(status);
 
         status = libusb_claim_interface(p_handle, L6_INTERFACE);  
-        debug_print( "claim interface\n");
+        debug_print( "USB claim interface\n");
         fbv3_print_usb_error(status);
 
-        debug_print( "success: config %d, Interface %d\n", L6_CONFIGURATION, L6_INTERFACE);
+        debug_print( "USB Success: config %d, Interface %d\n", L6_CONFIGURATION, L6_INTERFACE);
       }
       else
       {
           status = LIBUSB_ERROR_OTHER;
-          debug_print( "there was a problem getting handle ret status  %d, handle %d\n", status, p_handle);
+          debug_print( "USB There was a problem getting handle ret status  %d, handle %d\n", status, p_handle);
       }
     }
     
@@ -279,7 +279,7 @@ bool fbv3_process(void)
 
     if( NULL == p_handle)
     {
-        debug_print( "device handle is NULL\n");
+        debug_print( "USB device handle is NULL\n");
         return LIBUSB_ERROR_OTHER;
     }
 
@@ -308,8 +308,8 @@ bool fbv3_process(void)
       //we got some data
       if(LIBUSB_SUCCESS == ret)
       {
-          fbv3_print_msg_data(buff_in, bytes_rx_tx, "INPUT");  
-          debug_print( "received %d\n", bytes_rx_tx);
+          fbv3_print_msg_data(buff_in, bytes_rx_tx, "USB INPUT");  
+          debug_print( "USB received %d\n", bytes_rx_tx);
           fbv3_print_usb_error(ret);
           
           //todo do something with data when you know what it is
@@ -411,7 +411,7 @@ bool fbv3_process(void)
                                    L6_TIMEOUT_OUT);  //timeout (ms)
     
         
-        debug_print( "size %d sent %d\n", buff_out_sz, bytes_rx_tx);
+        debug_print( "USB output size %d sent %d\n", buff_out_sz, bytes_rx_tx);
         
         fbv3_print_usb_error(ret);
     }
@@ -432,7 +432,7 @@ void fbv3_update_effect_switch(enum effects effect, /// effect to add
         effect != EFFECTS_D &&
         effect != EFFECTS_PRESET_INIT)
     {
-        debug_print( "adding command effect %s state %d\n", effects_strings[effect], (int)on_off);
+        debug_print( "Adding command effect %s state %d\n", effects_strings[effect], (int)on_off);
 
         commands_to_process[command_index].effect = effect;
         commands_to_process[command_index].on_off = on_off;
@@ -457,15 +457,11 @@ static void fbv3_set_preset(enum effects effect)
     switch(effect)
     {
       case EFFECTS_BANK_UP:
-        debug_print( "BANK UP1 - %d\n", bank_num_store); 
         bank_num_store = (bank_num_store + 1) >= BANK_END ? BANK_START : (bank_num_store + 1);
-        debug_print( "BANK UP2 - %d\n", bank_num_store); 
         bank_update = true;
         break; 
       case EFFECTS_BANK_DOWN:
-        debug_print( "BANK DOWN1 - %d\n", bank_num_store); 
         bank_num_store = (bank_num_store - 1) < BANK_START ? (BANK_END-1) : (bank_num_store - 1); 
-        debug_print( "BANK DOWN2 - %d\n", bank_num_store); 
         bank_update = true;
         break;
       case EFFECTS_A:
@@ -514,7 +510,7 @@ static void fbv3_set_preset(enum effects effect)
 
     command_index = (command_index + 1) % CMD_MAX_SZ; //next index number
 
-    debug_print( "setting bank %d to preset %d\n", bank_num_store, preset_num_store);
+    debug_print( "Setting bank %d to preset %d\n", bank_num_store, preset_num_store);
 }
 
 /// @breif Gets the structure that holds the current state of each effect pedal
@@ -610,12 +606,12 @@ static enum comm_state fbv3_process_commands(void)
                         break;
                 }
 
-                debug_print( "got command %d! effect %s state %d, preset %d \n", i, effects_strings[effect], (int)state, preset);
+                debug_print( "Got command %d! effect %s state %d, preset %d \n", i, effects_strings[effect], (int)state, preset);
             }
             else
             {
                 ret = COMM_STATE_WAIT;
-                debug_print( "unknown effect type 0x%x", (int)effect);
+                debug_print( "Unknown effect type 0x%x", (int)effect);
             }
 
             break;
@@ -631,7 +627,7 @@ void fbv3_print_msg_data(
     const size_t size,         /// size of message data
     const char * description)  /// string description of message data
 {
-    
+#if(DEBUG)
     debug_print( "\n%s:\n", description);
     
     size_t i = 0;
@@ -647,13 +643,15 @@ void fbv3_print_msg_data(
     }
     
     debug_print( "\n");
+#endif //DEBUG
 }
 
 
 /// @brief Print out readable format of usb error return code, used for debugging.
 void fbv3_print_usb_error(int16_t error) /// usb error code
 {
-    debug_print( "usb result code: ");
+#if(DEBUG)
+    debug_print( "USB result code: ");
     switch(error)
     {
         case LIBUSB_SUCCESS:
@@ -704,12 +702,12 @@ void fbv3_print_usb_error(int16_t error) /// usb error code
     }
     
     debug_print("\n");
+#endif //DEBUG
 }
 
 /// @brief Clean up usb handle
 void fbv3_close(void)
 {
-    debug_print( "\n");
     if(NULL != p_handle)
     {
         libusb_release_interface(p_handle, L6_INTERFACE);

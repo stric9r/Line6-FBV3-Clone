@@ -91,7 +91,7 @@ void fbv3_store_set_preset(int8_t preset)
     }
     else
     {
-      debug_print( "preset out of range \n");
+      debug_print( "Preset out of range\n");
     }
 }
 
@@ -111,13 +111,12 @@ void fbv3_store_set_bank(int8_t bank)
     //Get the correct bank index then update the bank
     if(bank < BANK_MAX)
     {
-        debug_print( "STORE BANK %d\n", (char)bank);
         store[BANK_CURRENT_IDX] = (char)bank; 
         (void)fbv3_write_store_to_file();
     }
     else
     {
-        debug_print( "bank out of range \n");
+        debug_print( "Bank out of range\n");
     }
 }
 
@@ -166,7 +165,7 @@ static bool fbv3_read_store_from_file(void)
         }
         else
         {
-            debug_print( "storage file not found\n");
+            debug_print( "Config file (%s) not found\n", FBV_STORE_FILE_NAME);
         }
     }
     
@@ -193,7 +192,7 @@ static bool fbv3_write_store_to_file(void)
     }
     else
     {
-        debug_print( "could not open or create file \n");
+        debug_print( "Could not open or create file %s\n", FBV_STORE_FILE_NAME);
     }
     
     return ret_val;
