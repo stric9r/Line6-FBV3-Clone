@@ -90,7 +90,7 @@ void fbv3_store_set_preset(int8_t preset)
     }
     else
     {
-      fprintf(stderr, "preset out of range \n");
+      debug_print( "preset out of range \n");
     }
 }
 
@@ -110,13 +110,13 @@ void fbv3_store_set_bank(int8_t bank)
     //Get the correct bank index then update the bank
     if(bank < BANK_MAX)
     {
-        fprintf(stderr, "STORE BANK %d\n", (char)bank);
+        debug_print( "STORE BANK %d\n", (char)bank);
         store[BANK_CURRENT_IDX] = (char)bank; 
         (void)fbv3_write_store_to_file();
     }
     else
     {
-        fprintf(stderr, "bank out of range \n");
+        debug_print( "bank out of range \n");
     }
 }
 
@@ -131,11 +131,11 @@ static void print_storage(void)
      {
          if(i == BANK_CURRENT_IDX)
          {
-             fprintf(stderr, "CURRENT BANK %d BANK %d\n", i, store[i]);
+             debug_print( "CURRENT BANK %d BANK %d\n", i, store[i]);
          }
          else
          {
-             fprintf(stderr, "BANK %d PRESET %d\n", i, store[i]);
+             debug_print( "BANK %d PRESET %d\n", i, store[i]);
          }
      }
    }
@@ -165,7 +165,7 @@ static bool fbv3_read_store_from_file(void)
         }
         else
         {
-            fprintf(stderr, "storage file not found\n");
+            debug_print( "storage file not found\n");
         }
     }
     
@@ -192,7 +192,7 @@ static bool fbv3_write_store_to_file(void)
     }
     else
     {
-        fprintf(stderr, "could not open or create file \n");
+        debug_print( "could not open or create file \n");
     }
     
     return ret_val;
