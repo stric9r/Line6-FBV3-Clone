@@ -4,7 +4,6 @@
 
 #include "fbv3.h"
 #include <wiringPi.h>
-#include <stdio.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <unistd.h>
