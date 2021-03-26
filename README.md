@@ -12,7 +12,8 @@ It using wiringPi and libUSB.  It's important to upgrade wiringPi to version 2.5
 The platform can easily change, all platform specific code is in main. 
 
 ## Schematic 
-No schematic, it's litteraly buttons tied to the GPIO being software debounced.  See main.c for the current gpio usuage, or to change it.
+Just momentary buttons with software debouncing, also a MAX7219 to control the LED for status feedback.  
+Schematic is uploaded but not tested/finished, and no code written for the MAX7219 yet (as of 3/25/2021).
 
 ## Prereqs
 There are only two prereqs, and that's Libusb and updating WiringPi (mainly for Raspberry Pi 4B to work). Below are how you get them.
