@@ -82,57 +82,57 @@ void max7219_init(void(*f_write)(int,int),
 void max7219_set_digit_bcd(enum max7219_digits const digit, uint8_t const bcd)
 {
     uint8_t const addr = get_digit_addr(digit);
-    write(addr, bcd);
+    max7219_write(addr, bcd);
 }
 
 /// Clear all digits
-void clear_all(void)
+void max7219_clear_all(void)
 {
-    write(ADDR_DIG_0, MAX7219_DECODE_BLANK);
-    write(ADDR_DIG_1, MAX7219_DECODE_BLANK);
-    write(ADDR_DIG_2, MAX7219_DECODE_BLANK);
-    write(ADDR_DIG_3, MAX7219_DECODE_BLANK);
-    write(ADDR_DIG_4, MAX7219_DECODE_BLANK);
-    write(ADDR_DIG_5, MAX7219_DECODE_BLANK);
-    write(ADDR_DIG_6, MAX7219_DECODE_BLANK);
-    write(ADDR_DIG_7, MAX7219_DECODE_BLANK);
+    max7219_write(ADDR_DIG_0, MAX7219_DECODE_BLANK);
+    max7219_write(ADDR_DIG_1, MAX7219_DECODE_BLANK);
+    max7219_write(ADDR_DIG_2, MAX7219_DECODE_BLANK);
+    max7219_write(ADDR_DIG_3, MAX7219_DECODE_BLANK);
+    max7219_write(ADDR_DIG_4, MAX7219_DECODE_BLANK);
+    max7219_write(ADDR_DIG_5, MAX7219_DECODE_BLANK);
+    max7219_write(ADDR_DIG_6, MAX7219_DECODE_BLANK);
+    max7219_write(ADDR_DIG_7, MAX7219_DECODE_BLANK);
 }
 
 /// Clear single digit
 void max7219_clear_digit(enum max7219_digits const digit)
 {
     uint8_t const addr = get_digit_addr(digit);
-    write(addr, MAX7219_DECODE_BLANK);
+    max7219_write(addr, MAX7219_DECODE_BLANK);
 }
 
 /// Set the decode mode
 void max7219_set_decode_mode(uint8_t const mode)
 {
-    write(ADDR_DECODE_MODE, mode);
+    max7219_write(ADDR_DECODE_MODE, mode);
 }
 
 /// Set the LED intensity
 void max7219_set_intensity(enum max7219_intensities const intensity)
 {
-    write(ADDR_INTENSITY, (uint8_t)intensity);
+    max7219_write(ADDR_INTENSITY, (uint8_t)intensity);
 }
 
 /// Set the scan limit
 void max7219_set_scan_limit(enum max7219_scan_limits const scan_limit)
 {
-    write(ADDR_SCAN_LIMIT, (uint8_t)scan_limit);
+    max7219_write(ADDR_SCAN_LIMIT, (uint8_t)scan_limit);
 }
 
 /// Set the operating mode
 void max7219_set_mode(enum max7219_modes const mode)
 {
-    write(ADDR_MODE, (uint8_t)mode);
+    max7219_write(ADDR_MODE, (uint8_t)mode);
 }
 
 /// Set the test mode
 void max7219_set_display_test(enum max7219_display_tests const mode)
 {
-    write(ADDR_DISPLAY_TEST, (uint8_t)mode);
+    max7219_write(ADDR_DISPLAY_TEST, (uint8_t)mode);
 }
 
 /// General write command for all operations using the MAX7219
