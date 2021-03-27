@@ -4,6 +4,7 @@
 
 #include "fbv3.h"
 #include <wiringPi.h>
+#include "max7219.h"
 #include <stdbool.h>
 #include <stdint.h>
 #include <unistd.h>
@@ -27,6 +28,9 @@
 #define B_PIN           25 /*Pin ? */
 #define C_PIN           25 /*Pin ? */
 #define D_PIN           25 /*Pin ? */
+#define MAX7219_DIN 0
+#define MAX7219_CLK 0
+#define MAX7219_LD  0
 
 /// Used to debounce the buttons
 #define DEBOUNCE_DELAY 100 /*100 ms*/
@@ -43,6 +47,20 @@ int main(int argc, char *argv[])
 
     //setup io using wirePi
     setup_gpio();
+    
+    // Init the display driver
+    max7219_init(digitalWrite, 
+                 delay, 
+                 MAX7219_DIN,
+                 MAX7219_CLK,
+                 MAX7219_LD);
+
+    // Setup the display driver
+    max7219_set_decode_mode(MAX7219_DECODE_NONE);
+    max7219_set_intensity(max7219_intensities.INTENSITY_7);
+    max7219_set_scan_limit(max7219_scan_limits.SCAN_2);
+    max7219_set_mode(max7219_modes.NORMAL);
+    max7219_set_display_test(max7219_display_tests.TEST); //SRR dbg
     
     //init the foot board clone (handles USB comms too)
     b_run = fbv3_init();

@@ -29,7 +29,7 @@ enum max7219_digits
 
 /// Used with set_intensity to specify
 /// how bright to make the led's
-enum max7219_intensity
+enum max7219_intensities
 {
     INTENSITY_0  = 0,  // 1/32 (min on)
     INTENSITY_1  = 1,  // 3/32
@@ -52,7 +52,7 @@ enum max7219_intensity
 /// Used with set_scan_limit
 /// to specify how many digits
 /// are to be used
-enum max7219_scan_limit
+enum max7219_scan_limits
 {   
     SCAN_1 = 0, //scan digit 0 only
     SCAN_2 = 1, //scan digits 0-1 only
@@ -68,7 +68,7 @@ enum max7219_scan_limit
 /// Used with set_display_test
 /// to specify normal operations
 /// or test mode
-enum max7219_display_test
+enum max7219_display_tests
 {
     NORMAL = 0,
     TEST   = 1, 
@@ -116,19 +116,19 @@ enum max7219_display_test
 #define ADDR_DISPLAY_TEST 0x0F
 
 
-void init(void(*f_write)(int,int),
-          void(*f_delay_us)(int),
-          uint8_t const data_out,
-          uint8_t const clk, 
-          uint8_t const load);
-void set_digit_bcd(enum max7219_digits const digit, uint8_t const bcd);
-void clear_all(void);
-void clear_digit(enum max7219_digits const digit);
-void set_decode_mode(uint8_t mode);
-void set_intensity(enum max7219_intensity intensity);
-void set_scan_limit(max7219_scan_limit const scan_limit);
-void set_mode(enum max7219_modes const mode);
-void set_display_test(enum max7219_display_test const mode);
-void write(uint8_t const addr, uint8_t const data);
+void max7219_init(void(*f_write)(int,int),
+                    void(*f_delay_us)(int),
+                    uint8_t const data_out,
+                    uint8_t const clk, 
+                    uint8_t const load);
+void max7219_set_digit_bcd(enum max7219_digits const digit, uint8_t const bcd);
+void max7219_clear_all(void);
+void max7219_clear_digit(enum max7219_digits const digit);
+void max7219_set_decode_mode(uint8_t mode);
+void max7219_set_intensity(enum max7219_intensities intensity);
+void max7219_set_scan_limit(enum max7219_scan_limits const scan_limit);
+void max7219_set_mode(enum max7219_modes const mode);
+void max7219_set_display_test(enum max7219_display_tests const mode);
+void max7219_write(uint8_t const addr, uint8_t const data);
 
 #endif //MAX7219__H

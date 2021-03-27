@@ -64,11 +64,11 @@ uint8_t get_digit_addr(enum max7219_digits const digit)
 }
 
 /// Setup the pins and write function pointer
-void init(void(*f_write)(int,int),
-          void(*f_delay_us)(int),
-          uint8_t const data_out_pin,
-          uint8_t const clk_pin, 
-          uint8_t const load_pin)
+void max7219_init(void(*f_write)(int,int),
+                    void(*f_delay_us)(int),
+                    uint8_t const data_out_pin,
+                    uint8_t const clk_pin, 
+                    uint8_t const load_pin)
 {
     comm.f_write = f_write;
     comm.f_delay_us = f_delay_us;
@@ -79,7 +79,7 @@ void init(void(*f_write)(int,int),
 
 /// Update a digit using BCD 
 /// Note that the mode must be decode
-void set_digit_bcd(enum max7219_digits const digit, uint8_t const bcd)
+void max7219_set_digit_bcd(enum max7219_digits const digit, uint8_t const bcd)
 {
     uint8_t const addr = get_digit_addr(digit);
     write(addr, bcd);
@@ -99,45 +99,45 @@ void clear_all(void)
 }
 
 /// Clear single digit
-void clear_digit(enum max7219_digits const digit)
+void max7219_clear_digit(enum max7219_digits const digit)
 {
     uint8_t const addr = get_digit_addr(digit);
     write(addr, MAX7219_DECODE_BLANK);
 }
 
 /// Set the decode mode
-void set_decode_mode(uint8_t const mode)
+void max7219_set_decode_mode(uint8_t const mode)
 {
     write(ADDR_DECODE_MODE, mode);
 }
 
 /// Set the LED intensity
-void set_intensity(enum max7219_intensity const intensity)
+void max7219_set_intensity(enum max7219_intensities const intensity)
 {
     write(ADDR_INTENSITY, (uint8_t)intensity);
 }
 
 /// Set the scan limit
-void set_scan_limit(enum max7219_scan_limit const scan_limit)
+void max7219_set_scan_limit(enum max7219_scan_limits const scan_limit)
 {
     write(ADDR_SCAN_LIMIT, (uint8_t)scan_limit);
 }
 
 /// Set the operating mode
-void set_mode(enum max7219_modes const mode)
+void max7219_set_mode(enum max7219_modes const mode)
 {
     write(ADDR_MODE, (uint8_t)mode);
 }
 
 /// Set the test mode
-void set_display_test(enum max7219_display_test const mode)
+void max7219_set_display_test(enum max7219_display_tests const mode)
 {
     write(ADDR_DISPLAY_TEST, (uint8_t)mode);
 }
 
 /// General write command for all operations using the MAX7219
 /// This is blocking
-void write(uint8_t const  addr, uint8_t const  data)
+void max7219_write(uint8_t const  addr, uint8_t const  data)
 {
     uint8_t const packet[MAX_PACKET_SIZE] = {data, addr};
 
