@@ -13,7 +13,7 @@
 
 /// Mapping to wPi from raspberry pi 4b and pi zero w pinout on header
 /// Mapping can be seen by running command "gpio readall"
-#define FX3_PIN        0 /*Pin 11*/
+#define FX3_PIN        25 /*0 Pin 11*/
 #define FX2_PIN        2 /*Pin 13*/
 #define FX1_PIN        3 /*Pin 15*/
 #define VOLUME_PIN     23 /*Pin 33*/
@@ -28,9 +28,9 @@
 #define B_PIN           25 /*Pin ? */
 #define C_PIN           25 /*Pin ? */
 #define D_PIN           25 /*Pin ? */
-#define MAX7219_DIN 0
-#define MAX7219_CLK 0
-#define MAX7219_LD  0
+#define MAX7219_DIN 0 /*11*/
+#define MAX7219_CLK 1 /*12*/
+#define MAX7219_LD  2 /*13*/
 
 /// Used to debounce the buttons
 #define DEBOUNCE_DELAY 100 /*100 ms*/
@@ -109,6 +109,10 @@ void setup_gpio()
     pinMode(B_PIN, INPUT);
     pinMode(C_PIN, INPUT);
     pinMode(D_PIN, INPUT);
+
+    pinMode(MAX7219_DIN, OUTPUT);
+    pinMode(MAX7219_CLK, OUTPUT);
+    pinMode(MAX7219_LD, OUTPUT);
 
     // use pull ups, no floating pins
     pullUpDnControl(FX3_PIN, PUD_DOWN);
