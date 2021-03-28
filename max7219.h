@@ -2,6 +2,7 @@
 #define MAX7219_H
 
 #include <stdint.h>
+#include <stdbool.h>
 
 /*enums and defines*/
 
@@ -25,6 +26,23 @@ enum max7219_digits
     DIGIT_5 = 5,
     DIGIT_6 = 6,
     DIGIT_7 = 7,
+    DIGIT_MAX = 8
+};
+
+/// Used with set_digit_segment
+/// Order matters in this enum,
+/// these are arragned according to
+/// bit position in register per datasheet
+enum max7219_segments
+{
+    SEG_G = 0,
+    SEG_F = 1,
+    SEG_E = 2,
+    SEG_D = 3,
+    SEG_C = 4,
+    SEG_B = 5,
+    SEG_A = 6,
+    SEG_DP = 7, // Decimal point
 };
 
 /// Used with set_intensity to specify
@@ -122,6 +140,9 @@ void max7219_init(void(*f_write)(int,int),
                     uint8_t const clk, 
                     uint8_t const load);
 void max7219_set_digit_bcd(enum max7219_digits const digit, uint8_t const bcd);
+void max7219_set_digit_segment(enum max7219_digits const digit, 
+                               enum max7219_segments segment, 
+                               bool state);
 void max7219_clear_all(void);
 void max7219_clear_digit(enum max7219_digits const digit);
 void max7219_set_decode_mode(uint8_t mode);

@@ -2,8 +2,8 @@
 
 /// Minimum clock width for high and low is 50ns
 /// To be very conservative, using the current value would 
-/// take 128 ms to write all 64 segments individually
-#define CLK_WIDTH_US 1000
+/// take 64 ms to write all 64 segments individually
+#define CLK_WIDTH_US 500
 
 
 // packet size 16 bits
@@ -12,6 +12,22 @@
 // data clocked in using MSB first
 #define START_IDX 1
 #define END_IDX 0
+
+union segments
+{
+    uint8_t all;
+
+    unsigned g :1;
+    unsigned f :1;
+    unsigned e :1;
+    unsigned d :1;
+    unsigned c :1;
+    unsigned b :1;
+    unsigned a :1;
+    unsigned dp:1;
+};
+
+static union segments digits_segment_store[DIGIT_MAX];
 
 struct comm_str
 {
@@ -29,6 +45,7 @@ uint8_t get_digit_addr(enum max7219_digits const digit);
 
 
 /// Translate enum to register address of digit
+/// If invalid digit, then the address for NO OPERATION returned
 uint8_t get_digit_addr(enum max7219_digits const digit)
 {
     uint8_t addr = ADDR_NO_OP;
@@ -58,6 +75,7 @@ uint8_t get_digit_addr(enum max7219_digits const digit)
         case DIGIT_7:
             addr = ADDR_DIG_7;
             break;
+        case DIGIT_MAX:
         default:
             break;
     }
@@ -75,6 +93,12 @@ void max7219_init(void(*f_write)(int,int),
     comm.data_out = data_out_pin;
     comm.clk = clk_pin;
     comm.load = load_pin;
+
+    // init storage
+    for(int i = 0; i < DIGIT_MAX; i++)
+    {
+        digits_segment_store[i].all = 0;
+    }
 }
 
 /// Update a digit using BCD 
@@ -83,6 +107,46 @@ void max7219_set_digit_bcd(enum max7219_digits const digit, uint8_t const bcd)
 {
     uint8_t const addr = get_digit_addr(digit);
     max7219_write(addr, bcd);
+}
+
+void max7219_set_digit_segment(enum max7219_digits const digit, 
+                               enum max7219_segments segment, 
+                               bool state)
+{
+    if(digit < DIGIT_MAX)
+    {
+        uint8_t addr = get_digit_addr(digit);
+
+        switch(segment)
+        {
+            case SEG_G:
+                digits_segment_store[digit].g = state ? 0 : 1;
+                break;
+            case SEG_F:
+                digits_segment_store[digit].f = state ? 0 : 1;
+                break;
+            case SEG_E:
+                digits_segment_store[digit].e = state ? 0 : 1;
+                break;
+            case SEG_D:
+                digits_segment_store[digit].d = state ? 0 : 1;
+                break;
+            case SEG_C:
+                digits_segment_store[digit].c = state ? 0 : 1;
+                break;
+            case SEG_B:
+                digits_segment_store[digit].b = state ? 0 : 1;
+                break;
+            case SEG_A:
+                digits_segment_store[digit].a = state ? 0 : 1;
+                break;
+            case SEG_DP:
+                digits_segment_store[digit].dp = state ? 0 : 1;
+                break;
+        }
+
+        max7219_write(addr, digits_segment_store[digit].all);
+    }
 }
 
 /// Clear all digits
@@ -96,13 +160,25 @@ void max7219_clear_all(void)
     max7219_write(ADDR_DIG_5, MAX7219_DECODE_BLANK);
     max7219_write(ADDR_DIG_6, MAX7219_DECODE_BLANK);
     max7219_write(ADDR_DIG_7, MAX7219_DECODE_BLANK);
+
+    // Clear storage
+    for(int i = 0; i < DIGIT_MAX; i++)
+    {
+        digits_segment_store[i].all = 0;
+    }
 }
 
 /// Clear single digit
 void max7219_clear_digit(enum max7219_digits const digit)
 {
-    uint8_t const addr = get_digit_addr(digit);
-    max7219_write(addr, MAX7219_DECODE_BLANK);
+    if(digit < DIGIT_MAX)
+    {
+        uint8_t const addr = get_digit_addr(digit);
+        max7219_write(addr, MAX7219_DECODE_BLANK);
+        
+        // Clear storage
+        digits_segment_store[digit].all = 0;
+    }
 }
 
 /// Set the decode mode
