@@ -32,7 +32,7 @@ static union segments digits_segment_store[DIGIT_MAX];
 struct comm_str
 {
     void(*f_write)(int,int);
-    void(*f_delay_us)(int);
+    void(*f_delay_us)(unsigned int);
     uint8_t data_out;
     uint8_t clk;
     uint8_t load;

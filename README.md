@@ -31,7 +31,7 @@ wget https://project-downloads.drogon.net/wiringpi-latest.deb
 sudo dpkg -i wiringpi-latest.deb
 
 ## Building using GCC
-gcc -o fbv3 main.c fbv3_store.c fbv3.c -lwiringPi -lusb-1.0
+gcc -o fbv3 main.c fbv3_store.c fbv3.c max7219.c -lwiringPi -lusb-1.0
 
 ## Execution
 Make sure to run with root access.
@@ -51,6 +51,11 @@ It's hardcoded to look in /opt/fbv3_clone/ for fbv3 application.
 It will check if FBV3 Clone is running, if not it'll start it.
 This is used to keep the program running incase the USB times out or the USB cable is unplugged then plugged in.
 It's a crutch until there is a better way to handle the program exiting unexpectedly.  
+
+### max7219.c
+### max7219.h
+The display driver for all the led's on the pedal board.  This module heavily exposes all the features of the max7219
+serial interface 8 digit led display driver.
 
 ### main.c
 The main entry of the code.  It combines the FBV3 clone module with wirePi to get I/O from the Raspberry Pi 4B.
