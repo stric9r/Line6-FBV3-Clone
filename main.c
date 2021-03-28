@@ -53,30 +53,20 @@ int main(int argc, char *argv[])
                  delayMicroseconds, 
                  MAX7219_DIN,
                  MAX7219_CLK,
-                 MAX7219_LD);
+                 MAX7219_LD,
+                 MAX7219_DECODE_NONE,
+                 INTENSITY_8,
+                 SCAN_LIMIT_2);
 
-    // Setup the display driver
-    //delay(2000);
-    //max7219_set_mode(MODE_SHUTDOWN);
-    //delay(2000);
-    //max7219_set_decode_mode(MAX7219_DECODE_NONE);
-    delay(2000);
-    max7219_set_intensity(INTENSITY_7);
-    //delay(2000);
-    //max7219_set_scan_limit(SCAN_LIMIT_2);
-    //delay(2000);
-    //max7219_set_display_test(TEST_OFF);
-    //delay(2000);
-    //max7219_set_mode(MODE_NORMAL);
-    //delay(2000);
-    //max7219_set_digit_segment(DIGIT_0, SEG_DP, true);
-    //delay(2000);
-    //max7219_set_digit_segment(DIGIT_0, SEG_DP, false);
-    //delay(2000);
-    //max7219_clear_all();
-    delay(2000);
-
-    return 0; //SRR debug
+    // Led test
+    // blink the board a few times
+    for(int i = 0; i < 3; i++)
+    {
+        max7219_set_display_test(TEST_ON);
+        delay(500);
+        max7219_set_display_test(TEST_OFF);
+        delay(500);
+    }
 
     //init the foot board clone (handles USB comms too)
     b_run = fbv3_init();

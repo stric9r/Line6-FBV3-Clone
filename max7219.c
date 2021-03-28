@@ -63,11 +63,16 @@ uint8_t get_digit_addr(enum max7219_digits const digit)
 }
 
 /// Setup the pins and write function pointer
+/// 
+/// When needed to change control settings, it is easier to just call init again.
 void max7219_init(void(*f_write)(int,int),
                     void(*f_delay_us)(unsigned int),
                     uint8_t const data_out_pin,
                     uint8_t const clk_pin, 
-                    uint8_t const load_pin)
+                    uint8_t const load_pin,
+                    uint8_t const decode_mode,
+                    enum max7219_intensities const intensity,
+                    enum max7219_scan_limits const scan_limit)
 {
     debug_print("MAX7219 - Init\n");
 
@@ -94,6 +99,15 @@ void max7219_init(void(*f_write)(int,int),
     {
         digits_segment_store[i] = 0;
     }
+
+    // Setup the display driver - order is important
+    max7219_set_mode(MODE_SHUTDOWN);
+    max7219_set_decode_mode(decode_mode);
+    max7219_set_intensity(intensity);
+    max7219_set_scan_limit(scan_limit);
+    max7219_set_display_test(TEST_OFF);
+    max7219_clear_all(); //clear all after mode determined
+    max7219_set_mode(MODE_NORMAL);
 }
 
 /// Update a digit using BCD 
@@ -202,12 +216,23 @@ void max7219_clear_digit(enum max7219_digits const digit)
     }
 }
 
+/// Set the test mode
+void max7219_set_display_test(enum max7219_display_tests const mode)
+{
+    debug_print("MAX7219 - set display test mode: 0x%x\n", (uint8_t)mode);
+    max7219_write(ADDR_DISPLAY_TEST, (uint8_t)mode);
+}
+
 /// Set the decode mode
 void max7219_set_decode_mode(uint8_t const mode)
 {
     decode_mode_store = (uint8_t)mode;
-    debug_print("MAX7219 - set decode mode: 0x%x\n", (uint8_t)mode);
+    debug_print("MAX7219 - set decode mode and clear: 0x%x\n", (uint8_t)mode);
     max7219_write(ADDR_DECODE_MODE, mode);
+
+    // clear all when mode set
+    // because all off bcd is 0xFF, all off segment is 0x00
+    max7219_clear_all();
 }
 
 /// Set the LED intensity
@@ -230,14 +255,6 @@ void max7219_set_mode(enum max7219_modes const mode)
     debug_print("MAX7219 - set mode: 0x%x\n", (uint8_t)mode);
     max7219_write(ADDR_MODE, (uint8_t)mode);
 }
-
-/// Set the test mode
-void max7219_set_display_test(enum max7219_display_tests const mode)
-{
-    debug_print("MAX7219 - set display test mode: 0x%x\n", (uint8_t)mode);
-    max7219_write(ADDR_DISPLAY_TEST, (uint8_t)mode);
-}
-
 /// General write command for all operations using the MAX7219
 /// This is blocking
 void max7219_write(uint8_t const  addr, uint8_t const  data)
@@ -272,7 +289,7 @@ void max7219_write(uint8_t const  addr, uint8_t const  data)
                 uint8_t bit = (packet[i] >> j) & 0x01;
                 comm.f_write(comm.data_out, bit);
                 
-                comm.f_delay_us(100); //give it a little extra to be set
+                comm.f_delay_us(50); //give it a little extra to be set
                                       //litle buggy when the rising edges happen at same time.
 
                 comm.f_write(comm.clk, 1); // data shifted on rising edge of clock
@@ -285,12 +302,13 @@ void max7219_write(uint8_t const  addr, uint8_t const  data)
 
         comm.f_write(comm.load, 1); // load data into chip 
                                     // load is not depended on clock in MAX7219
+        comm.f_delay_us(CLK_WIDTH_US);
 
         //clean up
         comm.f_write(comm.data_out, 0);
         comm.f_write(comm.load, 0);
         comm.f_write(comm.clk, 0); 
-        comm.f_delay_us(CLK_WIDTH_US);
+        
 
     }
     else

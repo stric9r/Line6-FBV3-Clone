@@ -133,23 +133,33 @@ enum max7219_display_tests
 #define ADDR_MODE         0x0C
 #define ADDR_DISPLAY_TEST 0x0F
 
-
+//
 void max7219_init(void(*f_write)(int,int),
                     void(*f_delay_us)(unsigned int),
                     uint8_t const data_out,
                     uint8_t const clk, 
-                    uint8_t const load);
+                    uint8_t const load,
+                    uint8_t const decode_mode,
+                    enum max7219_intensities const intensity,
+                    enum max7219_scan_limits const scan_limit);
+
+// General control
 void max7219_set_digit_bcd(enum max7219_digits const digit, uint8_t bcd, bool const decimal_point);
 void max7219_set_digit_segment(enum max7219_digits const digit, 
                                enum max7219_segments segment, 
                                bool state);
 void max7219_clear_all(void);
 void max7219_clear_digit(enum max7219_digits const digit);
+void max7219_set_display_test(enum max7219_display_tests const mode);
+
+// Settings - Note, make sure to set shutdown mode first, 
+//                  then update settings, and put back to normal mode
 void max7219_set_decode_mode(uint8_t mode);
 void max7219_set_intensity(enum max7219_intensities intensity);
 void max7219_set_scan_limit(enum max7219_scan_limits const scan_limit);
 void max7219_set_mode(enum max7219_modes const mode);
-void max7219_set_display_test(enum max7219_display_tests const mode);
+
+// General write to the chip for manual operations
 void max7219_write(uint8_t const addr, uint8_t const data);
 
 #endif //MAX7219__H
