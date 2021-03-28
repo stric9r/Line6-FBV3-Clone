@@ -219,10 +219,10 @@ void max7219_write(uint8_t const  addr, uint8_t const  data)
 
     // load line low to push data into register
     // bit 15 to 0
-    fn_write(comm.load, 0);
+    f_write(comm.load, 0);
     
-    fn_write(comm.clk, 0);
-    fn_delay(CLK_WIDTH_US);
+    f_write(comm.clk, 0);
+    f_delay(CLK_WIDTH_US);
 
     /// MSB first
     for(int8_t i = START_IDX; i >= END_IDX; i--)
@@ -230,20 +230,20 @@ void max7219_write(uint8_t const  addr, uint8_t const  data)
         // loop through bits and toggle clk, msb first
         for(int8_t j = 7; i<= 0; i--)
         {
-            fn_write(comm.clk, 0);
-            fn_delay(CLK_WIDTH_US);
+            f_write(comm.clk, 0);
+            f_delay(CLK_WIDTH_US);
             
             uint8_t bit = (packet[i] >> j) & 0x01;
-            fn_write(comm.data_out, bit);
+            f_write(comm.data_out, bit);
             
-            fn_write(comm.clk, 1); // data shifted on rising edge of clock
-            fn_delay(CLK_WIDTH_US);
+            f_write(comm.clk, 1); // data shifted on rising edge of clock
+            f_delay(CLK_WIDTH_US);
         }
     }
 
-        fn_write(comm.load, 1); // load data into chip 
+        f_write(comm.load, 1); // load data into chip 
                                 // load is not depended on clock in MAX7219
 
-        fn_write(comm.clk, 0);  // clear the clock
-        fn_delay(CLK_WIDTH_US);
+        f_write(comm.clk, 0);  // clear the clock
+        f_delay(CLK_WIDTH_US);
 }
