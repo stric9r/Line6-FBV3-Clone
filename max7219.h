@@ -115,7 +115,7 @@ enum max7219_display_tests
 #define MAX7219_DECODE_BCD_H     0x0C
 #define MAX7219_DECODE_BCD_L     0x0D
 #define MAX7219_DECODE_BCD_P     0x0E
-#define MAX7219_DECODE_BLANK 0x0F
+#define MAX7219_DECODE_BCD_BLANK 0x0F
 
 /// Register address map in chip
 #define ADDR_NO_OP        0x00
@@ -139,7 +139,7 @@ void max7219_init(void(*f_write)(int,int),
                     uint8_t const data_out,
                     uint8_t const clk, 
                     uint8_t const load);
-void max7219_set_digit_bcd(enum max7219_digits const digit, uint8_t const bcd);
+void max7219_set_digit_bcd(enum max7219_digits const digit, uint8_t bcd, bool const decimal_point);
 void max7219_set_digit_segment(enum max7219_digits const digit, 
                                enum max7219_segments segment, 
                                bool state);
