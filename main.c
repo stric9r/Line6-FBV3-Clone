@@ -50,17 +50,17 @@ int main(int argc, char *argv[])
     
     // Init the display driver
     max7219_init(digitalWrite, 
-                 delay, 
+                 delayMicroseconds, 
                  MAX7219_DIN,
                  MAX7219_CLK,
                  MAX7219_LD);
 
     // Setup the display driver
     max7219_set_decode_mode(MAX7219_DECODE_NONE);
-    max7219_set_intensity(max7219_intensities.INTENSITY_7);
-    max7219_set_scan_limit(max7219_scan_limits.SCAN_2);
-    max7219_set_mode(max7219_modes.NORMAL);
-    max7219_set_display_test(max7219_display_tests.TEST); //SRR dbg
+    max7219_set_intensity(INTENSITY_7);
+    max7219_set_scan_limit(SCAN_LIMIT_2);
+    max7219_set_mode(MODE_NORMAL);
+    max7219_set_display_test(TEST_ON); //SRR dbg
     
     //init the foot board clone (handles USB comms too)
     b_run = fbv3_init();
@@ -84,6 +84,8 @@ int main(int argc, char *argv[])
     }
     
     fbv3_close();
+
+    max7219_set_mode(MODE_SHUTDOWN);
 
     return 0;
 }

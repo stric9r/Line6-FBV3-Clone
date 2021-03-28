@@ -10,8 +10,8 @@
 /// in shutdown or normal operation
 enum max7219_modes
 {
-    SHUTDOWN = 0,
-    NORMAL   = 1,
+    MODE_SHUTDOWN = 0,
+    MODE_NORMAL   = 1,
 };
 
 /// Used with set_digit to specify
@@ -72,14 +72,14 @@ enum max7219_intensities
 /// are to be used
 enum max7219_scan_limits
 {   
-    SCAN_1 = 0, //scan digit 0 only
-    SCAN_2 = 1, //scan digits 0-1 only
-    SCAN_3 = 2, //scan digits 0-2 only
-    SCAN_4 = 3, //scan digits 0-3 only
-    SCAN_5 = 4, //scan digits 0-4 only
-    SCAN_6 = 5, //scan digits 0-5 only
-    SCAN_7 = 6, //scan digits 0-6 only
-    SCAN_8 = 7, //scan all digits
+    SCAN_LIMIT_1 = 0, //scan digit 0 only
+    SCAN_LIMIT_2 = 1, //scan digits 0-1 only
+    SCAN_LIMIT_3 = 2, //scan digits 0-2 only
+    SCAN_LIMIT_4 = 3, //scan digits 0-3 only
+    SCAN_LIMIT_5 = 4, //scan digits 0-4 only
+    SCAN_LIMIT_6 = 5, //scan digits 0-5 only
+    SCAN_LIMIT_7 = 6, //scan digits 0-6 only
+    SCAN_LIMIT_8 = 7, //scan all digits
 
 };
 
@@ -88,8 +88,8 @@ enum max7219_scan_limits
 /// or test mode
 enum max7219_display_tests
 {
-    NORMAL = 0,
-    TEST   = 1, 
+    TEST_OFF = 0,
+    TEST_ON  = 1, 
 };
 
 
@@ -135,7 +135,7 @@ enum max7219_display_tests
 
 
 void max7219_init(void(*f_write)(int,int),
-                    void(*f_delay_us)(int),
+                    void(*f_delay_us)(unsigned int),
                     uint8_t const data_out,
                     uint8_t const clk, 
                     uint8_t const load);

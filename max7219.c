@@ -83,7 +83,7 @@ uint8_t get_digit_addr(enum max7219_digits const digit)
 
 /// Setup the pins and write function pointer
 void max7219_init(void(*f_write)(int,int),
-                    void(*f_delay_us)(int),
+                    void(*f_delay_us)(unsigned int),
                     uint8_t const data_out_pin,
                     uint8_t const clk_pin, 
                     uint8_t const load_pin)
