@@ -1,5 +1,5 @@
 //How to build
-//gcc -o fbv3 main.c fbv3_store.c fbv3.c -lwiringPi -lusb-1.0
+//gcc -o fbv3 main.c fbv3_store.c fbv3.c max7219.c -lwiringPi -lusb-1.0
 
 
 #include "fbv3.h"
@@ -28,9 +28,11 @@
 #define B_PIN           25 /*Pin ? */
 #define C_PIN           25 /*Pin ? */
 #define D_PIN           25 /*Pin ? */
+// no alt pin yet #define ALT_PIN 0
 #define MAX7219_DIN 0 /*11*/
 #define MAX7219_CLK 1 /*12*/
 #define MAX7219_LD  2 /*13*/
+
 
 /// Used to debounce the buttons
 #define DEBOUNCE_DELAY 100 /*100 ms*/
@@ -38,6 +40,7 @@
 /*prototypes*/
 void setup_gpio(void);
 bool gpio_to_fbv3_effect(bool latching);
+void fbv3_effect_to_led_status(bool is_event);
 bool gpio_process(int pin, enum effects effect, int8_t * p_state, bool latching);
 
 /// @brief Main program entry
@@ -75,14 +78,17 @@ int main(int argc, char *argv[])
     {
         if(fbv3_ready())
         {
-          //poll the gpio and add to command queue
-          bool b_event = gpio_to_fbv3_effect(false);
+            //poll the gpio and add to command queue
+            bool b_event = gpio_to_fbv3_effect(false);
 
-          // poor man's debounce
-          if(b_event)
-          {
-              delay(DEBOUNCE_DELAY);
-          }
+            // poor man's debounce
+            if(b_event)
+            {
+                delay(DEBOUNCE_DELAY);
+            }
+
+            // set the LED status
+            fbv3_effect_to_led_status(b_event);
         }
                
         //process anything in the queue
@@ -117,12 +123,13 @@ void setup_gpio()
     pinMode(B_PIN, INPUT);
     pinMode(C_PIN, INPUT);
     pinMode(D_PIN, INPUT);
+    // no alt pin yet pintMode(ALT_PIN, INPUT);
 
     pinMode(MAX7219_DIN, OUTPUT);
     pinMode(MAX7219_CLK, OUTPUT);
     pinMode(MAX7219_LD, OUTPUT);
 
-    // use pull ups, no floating pins
+    // use pull downs, no floating pins
     pullUpDnControl(FX3_PIN, PUD_DOWN);
     pullUpDnControl(FX2_PIN, PUD_DOWN);
     pullUpDnControl(FX1_PIN, PUD_DOWN);
@@ -138,6 +145,7 @@ void setup_gpio()
     pullUpDnControl(B_PIN, PUD_DOWN);
     pullUpDnControl(C_PIN, PUD_DOWN);
     pullUpDnControl(D_PIN, PUD_DOWN);
+    // no alt pin yet pullUpDnControl(ALT_PIN, PUD_DOWN);
 }
 
 /// @brief Handle GPIO presses 
@@ -196,7 +204,38 @@ bool gpio_to_fbv3_effect(bool latching)
     ret |= gpio_process(B_PIN, EFFECTS_B, &p_fbv3_states->b_state, latching);
     ret |= gpio_process(C_PIN, EFFECTS_C, &p_fbv3_states->c_state, latching);
     ret |= gpio_process(D_PIN, EFFECTS_D, &p_fbv3_states->d_state, latching);
-
+    // no alt pin yet ret |= gpio_process(ALT_PIN, EFFECTS_ALT, &p_fbv3_states->alt_state, momentary);
     return ret;
 }
 
+/// @brief Updates LED status based on effect status
+///
+/// @note LED mapping, per schematic
+///                AMP: CMP  FX1  FX2  FX3  RVB   A    B    C    D   ALT
+///               CODE: FX1, FX2, FX3, FX4, FX5,  A,   B,   C,   D,  ALT
+/// MAX7219(digit/seg): 0-DP 0-G  0-F  0-E  0-D   0-C  0-B  0-A  1-B  1A
+void fbv3_effect_to_led_status(bool is_event)
+{
+    if(is_event)
+    {
+        struct fbv3_state * p_fbv3_states = fbv3_get_states();
+
+        max7219_set_digit_segment(DIGIT_0, SEG_E, p_fbv3_states->fx3_state > 0 ? true : false);
+        max7219_set_digit_segment(DIGIT_0, SEG_F, p_fbv3_states->fx2_state > 0 ? true : false);
+        max7219_set_digit_segment(DIGIT_0, SEG_G, p_fbv3_states->fx1_state > 0 ? true : false);
+        //max7219_set_digit_segment(SEG_?, p_fbv3_states->volume_state > 0 ? true : false);
+        max7219_set_digit_segment(DIGIT_0, SEG_DP, p_fbv3_states->compressor_state > 0 ? true : false);
+        //max7219_set_digit_segment(SEG_?, p_fbv3_states->equalizer_state > 0 ? true : false);
+        //max7219_set_digit_segment(SEG_?, p_fbv3_states->gate_state > 0 ? true : false);
+        max7219_set_digit_segment(DIGIT_0, SEG_D, p_fbv3_states->reverb_state > 0 ? true : false);
+        //max7219_set_digit_segment(SEG_?, p_fbv3_states->wah_state > 0 ? true : false);
+        //bank up, no led
+        //bank down, no led
+        max7219_set_digit_segment(DIGIT_0, SEG_A, p_fbv3_states->a_state > 0 ? true : false);
+        max7219_set_digit_segment(DIGIT_0, SEG_C, p_fbv3_states->a_state > 0 ? true : false);
+        max7219_set_digit_segment(DIGIT_0, SEG_B, p_fbv3_states->b_state > 0 ? true : false);
+        max7219_set_digit_segment(DIGIT_0, SEG_A, p_fbv3_states->c_state > 0 ? true : false);
+        max7219_set_digit_segment(DIGIT_1, SEG_B, p_fbv3_states->d_state > 0 ? true : false);
+        //no alt pin yet max7219_set_digit_segment(DIGIT_1, SEG_A, p_fbv3_states->alt_state > 0 ? true : false);
+    }
+}
