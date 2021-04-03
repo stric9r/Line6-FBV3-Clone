@@ -75,7 +75,7 @@ int8_t fbv3_store_get_preset(void)
 /// @brief Set the new preset value, write to file.
 ///
 /// @param preset the preset number to write to file
-void fbv3_store_set_preset(int8_t preset)
+void fbv3_store_set_preset(const int8_t preset)
 {
     // get the correct bank index then update the bank
     uint32_t current_idx = store[BANK_CURRENT_IDX]; 
@@ -105,7 +105,7 @@ int8_t fbv3_store_get_bank(void)
 /// @brief Set the new bank value, write to file.
 ///
 /// @param bank the bank number to write to file
-void fbv3_store_set_bank(int8_t bank)
+void fbv3_store_set_bank(const int8_t bank)
 {
     //Get the correct bank index then update the bank
     if(bank < BANK_MAX)

@@ -39,9 +39,9 @@
 
 /*prototypes*/
 void setup_gpio(void);
-bool gpio_to_fbv3_effect(bool latching);
-void fbv3_effect_to_led_status(bool is_event);
-bool gpio_process(int pin, enum effects effect, int8_t * p_state, bool latching);
+bool gpio_to_fbv3_effect(const bool latching);
+void fbv3_effect_to_led_status(const bool is_event);
+bool gpio_process(const int pin, const enum effects effect, int8_t * const p_state, const bool latching);
 
 /// @brief Main program entry
 int main(int argc, char *argv[])
@@ -156,7 +156,7 @@ void setup_gpio()
 /// @param latching is the switch latching or momentary
 ///
 /// @return True if an event happened
-bool gpio_process(int pin, enum effects effect, int8_t * p_state, bool latching)
+bool gpio_process(const int pin, const enum effects effect, int8_t * const p_state, const bool latching)
 {
     bool ret = false; 
     int8_t pin_state = (int8_t)digitalRead(pin);
@@ -184,7 +184,7 @@ bool gpio_process(int pin, enum effects effect, int8_t * p_state, bool latching)
 /// @brief Reads GPIO and issues effect commands to the FBV3 module
 ///
 /// @return True if event happened
-bool gpio_to_fbv3_effect(bool latching)
+bool gpio_to_fbv3_effect(const bool latching)
 {
     bool ret = false;
     struct fbv3_state * p_fbv3_states = fbv3_get_states();
@@ -214,7 +214,7 @@ bool gpio_to_fbv3_effect(bool latching)
 ///                AMP: CMP  FX1  FX2  FX3  RVB   A    B    C    D   ALT
 ///               CODE: FX1, FX2, FX3, FX4, FX5,  A,   B,   C,   D,  ALT
 /// MAX7219(digit/seg): 0-DP 0-G  0-F  0-E  0-D   0-C  0-B  0-A  1-B  1A
-void fbv3_effect_to_led_status(bool is_event)
+void fbv3_effect_to_led_status(const bool is_event)
 {
     if(is_event)
     {
