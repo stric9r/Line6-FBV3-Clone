@@ -29,6 +29,7 @@ enum comm_state
     COMM_STATE_CTRL2,       /// Control command then back to wait state
     COMM_STATE_BANK_PRESET1,
     COMM_STATE_BANK_PRESET2,/// Complete bank message
+    COMM_STATE_ALT,         /// Alt functionality not defined
     COMM_STATE_MAX,
 };
 
@@ -386,6 +387,12 @@ bool fbv3_process(void)
           strcpy(description, "BANK2 MSG");
           
           state = COMM_STATE_WAIT; //force back into wait to process next message
+        case COMM_STATE_ALT:
+          strcpy(description, "ALT"); //functionality not defined yet
+          buff_out = NULL;            //set null so no usb sent out
+          buff_out_sz = 0;
+          
+          state = COMM_STATE_WAIT; //force back into wait to process next message
         default:
             fpv_clone_ready = false;
             return LIBUSB_ERROR_OTHER;
@@ -429,6 +436,7 @@ void fbv3_update_effect_switch(const enum effects effect, /// effect to add
         effect != EFFECTS_B &&
         effect != EFFECTS_C &&
         effect != EFFECTS_D &&
+        effect != EFFECTS_ALT &&
         effect != EFFECTS_PRESET_INIT)
     {
         debug_print( "Adding command effect %s state %d\n", effects_strings[effect], (int)on_off);
@@ -439,7 +447,11 @@ void fbv3_update_effect_switch(const enum effects effect, /// effect to add
 
         command_index = (command_index + 1) % CMD_MAX_SZ;
     }
-    else
+    else if (effect == EFFECTS_ALT)
+    {
+        debug_print("Alt switch pressed!, no function yet")
+    }
+    else //preset
     {
         fbv3_set_preset(effect);
     }
@@ -600,6 +612,8 @@ static enum comm_state fbv3_process_commands(void)
                         preset_msg1[PRESET_IDX] = preset;
                         ret = COMM_STATE_BANK_PRESET1;
                         break;
+                    case EFFECTS_ALT:
+                        // No function here
                     default:
                         ret = COMM_STATE_WAIT;
                         break;
