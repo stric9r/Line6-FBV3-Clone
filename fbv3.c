@@ -449,7 +449,7 @@ void fbv3_update_effect_switch(const enum effects effect, /// effect to add
     }
     else if (effect == EFFECTS_ALT)
     {
-        debug_print("Alt switch pressed!, no function yet")
+        debug_print("Alt switch pressed!, no function yet");
     }
     else //preset
     {

@@ -157,7 +157,7 @@ void setup_gpio()
     pinMode(B_PIN, INPUT);
     pinMode(C_PIN, INPUT);
     pinMode(D_PIN, INPUT);
-    pintMode(ALT_PIN, INPUT);
+    pinMode(ALT_PIN, INPUT);
 
     #ifdef FUTURE_MAYBE
     pinMode(VOLUME_PIN, INPUT);
