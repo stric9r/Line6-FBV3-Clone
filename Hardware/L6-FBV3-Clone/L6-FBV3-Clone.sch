@@ -443,7 +443,7 @@ Text GLabel 2550 6200 0    50   Input ~ 0
 PRE_B
 Text GLabel 3300 4900 2    50   Input ~ 0
 PRE_C
-Text GLabel 3300 5000 2    50   Input ~ 0
+Text GLabel 3300 5100 2    50   Input ~ 0
 PRE_D
 Text GLabel 2550 4700 0    50   Input ~ 0
 BNK_UP
@@ -589,8 +589,6 @@ Wire Wire Line
 Wire Wire Line
 	3150 4900 3300 4900
 Wire Wire Line
-	3300 5000 3150 5000
-Wire Wire Line
 	3300 5200 3150 5200
 Wire Wire Line
 	3150 6100 3250 6100
@@ -608,4 +606,6 @@ Wire Wire Line
 	2650 5900 2550 5900
 Wire Wire Line
 	2650 5800 2550 5800
+Wire Wire Line
+	3150 5100 3300 5100
 $EndSCHEMATC

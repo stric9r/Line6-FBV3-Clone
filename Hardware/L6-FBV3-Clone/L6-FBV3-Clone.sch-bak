@@ -128,7 +128,7 @@ L Device:LED D2
 U 1 1 605F2A3D
 P 10400 3250
 F 0 "D2" V 10439 3132 50  0000 R CNN
-F 1 "TBD" V 10348 3132 50  0000 R CNN
+F 1 "ALT" V 10348 3132 50  0000 R CNN
 F 2 "" H 10400 3250 50  0001 C CNN
 F 3 "~" H 10400 3250 50  0001 C CNN
 	1    10400 3250
@@ -355,7 +355,7 @@ BNK_UP
 Text GLabel 3700 2550 0    50   Output ~ 0
 BNK_DWN
 Text GLabel 3700 3000 0    50   Output ~ 0
-TBD
+ALT
 Text GLabel 3100 850  1    50   Input ~ 0
 Vss3.3
 Wire Wire Line
@@ -427,35 +427,35 @@ Wire Wire Line
 	3700 2100 3850 2100
 Wire Wire Line
 	3700 1650 3850 1650
-Text GLabel 2500 6100 0    50   Input ~ 0
+Text GLabel 2550 5000 0    50   Input ~ 0
 FX1
-Text GLabel 2500 5100 0    50   Input ~ 0
+Text GLabel 2550 5100 0    50   Input ~ 0
 FX2
-Text GLabel 2500 5000 0    50   Input ~ 0
+Text GLabel 2550 5800 0    50   Input ~ 0
 FX3
-Text GLabel 2500 4900 0    50   Input ~ 0
+Text GLabel 2550 5900 0    50   Input ~ 0
 FX4
-Text GLabel 3250 6200 2    50   Input ~ 0
+Text GLabel 2550 6000 0    50   Input ~ 0
 FX5
-Text GLabel 2400 3600 0    50   Input ~ 0
+Text GLabel 2550 6100 0    50   Input ~ 0
 PRE_A
-Text GLabel 2400 3700 0    50   Input ~ 0
+Text GLabel 2550 6200 0    50   Input ~ 0
 PRE_B
-Text GLabel 2400 3800 0    50   Input ~ 0
-PRE_C
-Text GLabel 2400 3900 0    50   Input ~ 0
-PRE_D
 Text GLabel 3300 4900 2    50   Input ~ 0
+PRE_C
+Text GLabel 3300 5000 2    50   Input ~ 0
+PRE_D
+Text GLabel 2550 4700 0    50   Input ~ 0
 BNK_UP
-Text GLabel 3300 5100 2    50   Input ~ 0
+Text GLabel 2550 4900 0    50   Input ~ 0
 BNK_DWN
-Text GLabel 2900 3750 0    50   Input ~ 0
-TBD
-Text GLabel 3650 3550 0    50   Output ~ 0
+Text GLabel 3300 5200 2    50   Input ~ 0
+ALT
+Text GLabel 3250 6300 2    50   Output ~ 0
 LOAD
-Text GLabel 3600 3650 0    50   Output ~ 0
+Text GLabel 3250 6200 2    50   Output ~ 0
 CLK
-Text GLabel 3550 3750 0    50   Output ~ 0
+Text GLabel 3250 6100 2    50   Output ~ 0
 DIN
 Text GLabel 3350 4600 2    50   Input ~ 0
 Vdd
@@ -480,20 +480,6 @@ Wire Wire Line
 	3350 4400 3150 4400
 Wire Wire Line
 	3350 4600 3150 4600
-Wire Wire Line
-	3300 4900 3150 4900
-Wire Wire Line
-	3300 5100 3150 5100
-Wire Wire Line
-	2500 4900 2650 4900
-Wire Wire Line
-	2500 5000 2650 5000
-Wire Wire Line
-	2500 5100 2650 5100
-Wire Wire Line
-	2500 6100 2650 6100
-Wire Wire Line
-	3150 6200 3250 6200
 Text GLabel 3350 4400 2    50   Input ~ 0
 Vss
 Text GLabel 2550 4400 0    50   Output ~ 0
@@ -592,4 +578,34 @@ NoConn ~ 6150 3250
 NoConn ~ 6150 3350
 NoConn ~ 6150 3450
 NoConn ~ 6150 3550
+Wire Wire Line
+	2550 4700 2650 4700
+Wire Wire Line
+	2550 4900 2650 4900
+Wire Wire Line
+	2550 5000 2650 5000
+Wire Wire Line
+	2550 5100 2650 5100
+Wire Wire Line
+	3150 4900 3300 4900
+Wire Wire Line
+	3300 5000 3150 5000
+Wire Wire Line
+	3300 5200 3150 5200
+Wire Wire Line
+	3150 6100 3250 6100
+Wire Wire Line
+	3150 6200 3250 6200
+Wire Wire Line
+	3150 6300 3250 6300
+Wire Wire Line
+	2650 6200 2550 6200
+Wire Wire Line
+	2650 6100 2550 6100
+Wire Wire Line
+	2650 6000 2550 6000
+Wire Wire Line
+	2650 5900 2550 5900
+Wire Wire Line
+	2650 5800 2550 5800
 $EndSCHEMATC
