@@ -25,6 +25,7 @@ enum effects
     EFFECTS_B,
     EFFECTS_C,
     EFFECTS_D,
+    EFFECTS_ALT,
     EFFECTS_PRESET_INIT,
     EFFECTS_MAX,
 };
@@ -47,6 +48,7 @@ struct fbv3_state
   int8_t b_state;
   int8_t c_state;
   int8_t d_state;
+  int8_t alt_state;
 };
 
 bool fbv3_init(void);
