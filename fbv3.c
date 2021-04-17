@@ -166,9 +166,9 @@ static bool fpv_clone_ready = false;  /// Used to signal the pedal can take comm
 
 /*function Prototypes*/
 static enum comm_state fbv3_process_commands(void);
-static void fbv3_print_msg_data(const uint8_t* data, const size_t size, const char * description);
+static void fbv3_print_msg_data(const uint8_t * const data, const size_t size, const char * const description);
 static void fbv3_print_usb_error(const int16_t error);
-static void fbv3_set_preset(enum effects effect);
+static void fbv3_set_preset(const enum effects effect);
 
 /// @brief Initialize the fbv3 interface over USB.
 ///        This handles enumeration, configuration, and kernal detatchment.
@@ -420,8 +420,8 @@ bool fbv3_process(void)
 }
 
 /// @brief Adds effect command to be processed
-void fbv3_update_effect_switch(enum effects effect, /// effect to add 
-                               bool on_off)         /// effect on/off state
+void fbv3_update_effect_switch(const enum effects effect, /// effect to add 
+                               const bool on_off)         /// effect on/off state
 {
     if( effect != EFFECTS_BANK_UP && 
         effect != EFFECTS_BANK_DOWN &&
@@ -447,7 +447,7 @@ void fbv3_update_effect_switch(enum effects effect, /// effect to add
 }
 
 /// @brief Adds command to change presets
-static void fbv3_set_preset(enum effects effect)
+static void fbv3_set_preset(const enum effects effect)
 {
     //get the offset
     int8_t preset_offset = 0;
@@ -622,9 +622,9 @@ static enum comm_state fbv3_process_commands(void)
 
 /// @brief Print function for message data, used for debugging.
 void fbv3_print_msg_data(
-    const uint8_t* data,       /// message data
-    const size_t size,         /// size of message data
-    const char * description)  /// string description of message data
+    const uint8_t const * const data,       /// message data
+    const size_t const size,                /// size of message data
+    const char const * const description)   /// string description of message data
 {
 #if(DEBUG)
     debug_print( "\n%s:\n", description);
@@ -647,7 +647,7 @@ void fbv3_print_msg_data(
 
 
 /// @brief Print out readable format of usb error return code, used for debugging.
-void fbv3_print_usb_error(int16_t error) /// usb error code
+void fbv3_print_usb_error(const int16_t error) /// usb error code
 {
 #if(DEBUG)
     debug_print( "USB result code: ");

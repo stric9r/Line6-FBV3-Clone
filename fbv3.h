@@ -53,7 +53,7 @@ bool fbv3_init(void);
 bool fbv3_ready(void);
 bool fbv3_process(void);
 void fbv3_close(void);
-void fbv3_update_effect_switch(enum effects effect, bool on_off); 
+void fbv3_update_effect_switch(const enum effects effect, const bool on_off); 
 void fbv3_increment_preset(void);
 void fbv3_decrement_preset(void);
 struct fbv3_state * fbv3_get_states(void);
