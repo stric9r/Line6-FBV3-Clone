@@ -87,10 +87,10 @@ void max7219_init(void(*f_write)(int,int),
     comm.clk = clk_pin;
     comm.load = load_pin;
 
-    // set it all to 0
+    // set it to default
     comm.f_write(comm.data_out, 0);
     comm.f_write(comm.clk, 0);
-    comm.f_write(comm.load, 0);
+    comm.f_write(comm.load, 1); //active low
 
     decode_mode_store = 0;
 
@@ -148,6 +148,25 @@ void max7219_set_digit_segment(enum max7219_digits const digit,
         }
         
 
+       /* Debug to see data stored
+       debug_print("Digit Store: Dig 0 0x%x Dig 1 0x%x\n", digits_segment_store[0], digits_segment_store[1]);
+       debug_print("Btn _   Dig %d Seg DP %d\n", 0, digits_segment_store[0] & 0x80);
+       debug_print("Btn B   Dig %d Seg A  %d\n", 0, digits_segment_store[0] & 0x40);
+       debug_print("Btn A   Dig %d Seg B  %d\n", 0, digits_segment_store[0] & 0x20);
+       debug_print("Btn _   Dig %d Seg C  %d\n", 0, digits_segment_store[0] & 0x10);
+       debug_print("Btn _   Dig %d Seg D  %d\n", 0, digits_segment_store[0] & 0x08);
+       debug_print("Btn _   Dig %d Seg E  %d\n", 0, digits_segment_store[0] & 0x04);
+       debug_print("Btn _   Dig %d Seg F  %d\n", 0, digits_segment_store[0] & 0x02);
+       debug_print("Btn _   Dig %d Seg G  %d\n", 0, digits_segment_store[0] & 0x01);
+       debug_print("Btn 1   Dig %d Seg DP %d\n", 1, digits_segment_store[1] & 0x80);
+       debug_print("Btn C   Dig %d Seg A  %d\n", 1, digits_segment_store[1] & 0x40);
+       debug_print("Btn ALT Dig %d Seg B  %d\n", 1, digits_segment_store[1] & 0x20);
+       debug_print("Btn D   Dig %d Seg C  %d\n", 1, digits_segment_store[1] & 0x10);
+       debug_print("Btn 5   Dig %d Seg D  %d\n", 1, digits_segment_store[1] & 0x08);
+       debug_print("Btn 4   Dig %d Seg E  %d\n", 1, digits_segment_store[1] & 0x04);
+       debug_print("Btn 3   Dig %d Seg F  %d\n", 1, digits_segment_store[1] & 0x02);
+       debug_print("Btn 2   Dig %d Seg G  %d\n", 1, digits_segment_store[1] & 0x01);
+       */
         max7219_write(addr, digits_segment_store[digit]);
     }
 }
@@ -300,13 +319,12 @@ void max7219_write(uint8_t const  addr, uint8_t const  data)
         }
         //debug_print("\n\n");
 
-        comm.f_write(comm.load, 1); // load data into chip 
-                                    // load is not depended on clock in MAX7219
         comm.f_delay_us(CLK_WIDTH_US);
 
         //clean up
+        comm.f_write(comm.load, 1); // data latched on rising edge
+                                    // load is not depended on clock in MAX7219
         comm.f_write(comm.data_out, 0);
-        comm.f_write(comm.load, 0);
         comm.f_write(comm.clk, 0); 
         
 
