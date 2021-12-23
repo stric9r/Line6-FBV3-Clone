@@ -40,7 +40,7 @@ L Device:LED D9
 U 1 1 605E3487
 P 9000 3250
 F 0 "D9" V 9039 3132 50  0000 R CNN
-F 1 "PRE_B" V 8948 3132 50  0000 R CNN
+F 1 "ALT" V 8948 3132 50  0000 R CNN
 F 2 "TerminalBlock_Phoenix:TerminalBlock_Phoenix_MPT-0,5-2-2.54_1x02_P2.54mm_Horizontal" H 9000 3250 50  0001 C CNN
 F 3 "~" H 9000 3250 50  0001 C CNN
 	1    9000 3250
@@ -51,7 +51,7 @@ L Device:LED D8
 U 1 1 605E3C43
 P 8600 3250
 F 0 "D8" V 8639 3132 50  0000 R CNN
-F 1 "PRE_A" V 8548 3132 50  0000 R CNN
+F 1 "PRE_D" V 8548 3132 50  0000 R CNN
 F 2 "TerminalBlock_Phoenix:TerminalBlock_Phoenix_MPT-0,5-2-2.54_1x02_P2.54mm_Horizontal" H 8600 3250 50  0001 C CNN
 F 3 "~" H 8600 3250 50  0001 C CNN
 	1    8600 3250
@@ -117,7 +117,7 @@ L Device:LED D1
 U 1 1 605F2A43
 P 9900 3250
 F 0 "D1" V 9939 3132 50  0000 R CNN
-F 1 "PRE_D" V 9848 3132 50  0000 R CNN
+F 1 "PRE_A" V 9848 3132 50  0000 R CNN
 F 2 "TerminalBlock_Phoenix:TerminalBlock_Phoenix_MPT-0,5-2-2.54_1x02_P2.54mm_Horizontal" H 9900 3250 50  0001 C CNN
 F 3 "~" H 9900 3250 50  0001 C CNN
 	1    9900 3250
@@ -128,7 +128,7 @@ L Device:LED D2
 U 1 1 605F2A3D
 P 10400 3250
 F 0 "D2" V 10439 3132 50  0000 R CNN
-F 1 "ALT" V 10348 3132 50  0000 R CNN
+F 1 "PRE_B" V 10348 3132 50  0000 R CNN
 F 2 "TerminalBlock_Phoenix:TerminalBlock_Phoenix_MPT-0,5-2-2.54_1x02_P2.54mm_Horizontal" H 10400 3250 50  0001 C CNN
 F 3 "~" H 10400 3250 50  0001 C CNN
 	1    10400 3250
@@ -477,11 +477,9 @@ Connection ~ 6950 3400
 Wire Wire Line
 	7350 3400 7750 3400
 Connection ~ 7350 3400
-Wire Wire Line
-	7750 3400 8000 3400
 Connection ~ 7750 3400
 Wire Wire Line
-	8200 3400 8600 3400
+	8200 3400 8400 3400
 Connection ~ 8200 3400
 Wire Wire Line
 	8600 3400 9000 3400
@@ -490,29 +488,11 @@ Wire Wire Line
 	9000 3400 9400 3400
 Connection ~ 9000 3400
 Wire Wire Line
-	9900 3400 10150 3400
-Wire Wire Line
 	6150 2950 6250 2950
 Wire Wire Line
 	6250 2950 6250 3800
 Wire Wire Line
-	6250 3800 10150 3800
-Wire Wire Line
-	10150 3800 10150 3400
-Connection ~ 10150 3400
-Wire Wire Line
-	10150 3400 10400 3400
-Wire Wire Line
 	6150 2850 6350 2850
-Wire Wire Line
-	6350 2850 6350 3700
-Wire Wire Line
-	6350 3700 8000 3700
-Wire Wire Line
-	8000 3700 8000 3400
-Connection ~ 8000 3400
-Wire Wire Line
-	8000 3400 8200 3400
 Wire Wire Line
 	6150 2750 6550 2750
 Wire Wire Line
@@ -671,4 +651,26 @@ Connection ~ 7450 1100
 Wire Wire Line
 	7550 1300 7450 1300
 Connection ~ 7450 1300
+Wire Wire Line
+	7750 3400 8200 3400
+Wire Wire Line
+	9900 3400 10150 3400
+Wire Wire Line
+	10150 3400 10150 3650
+Wire Wire Line
+	10150 3650 6350 3650
+Wire Wire Line
+	6350 2850 6350 3650
+Connection ~ 10150 3400
+Wire Wire Line
+	10150 3400 10400 3400
+Wire Wire Line
+	6250 3800 8400 3800
+Wire Wire Line
+	8400 3800 8400 3400
+Connection ~ 8400 3400
+Wire Wire Line
+	8400 3400 8600 3400
+Text Notes 4900 1250 0    50   ~ 0
+!!! HW BUG  Need more mA.  Really should be 14k or 10k !!!
 $EndSCHEMATC

@@ -72,14 +72,14 @@ enum max7219_intensities
 /// are to be used
 enum max7219_scan_limits
 {   
-    SCAN_LIMIT_1 = 0, //scan digit 0 only
-    SCAN_LIMIT_2 = 1, //scan digits 0-1 only
-    SCAN_LIMIT_3 = 2, //scan digits 0-2 only
-    SCAN_LIMIT_4 = 3, //scan digits 0-3 only
-    SCAN_LIMIT_5 = 4, //scan digits 0-4 only
-    SCAN_LIMIT_6 = 5, //scan digits 0-5 only
-    SCAN_LIMIT_7 = 6, //scan digits 0-6 only
-    SCAN_LIMIT_8 = 7, //scan all digits
+    SCAN_LIMIT_0 = 0, //scan digit 0 only
+    SCAN_LIMIT_1 = 1, //scan digits 0-1 only
+    SCAN_LIMIT_2 = 2, //scan digits 0-2 only
+    SCAN_LIMIT_3 = 3, //scan digits 0-3 only
+    SCAN_LIMIT_4 = 4, //scan digits 0-4 only
+    SCAN_LIMIT_5 = 5, //scan digits 0-5 only
+    SCAN_LIMIT_6 = 6, //scan digits 0-6 only
+    SCAN_LIMIT_7 = 7, //scan all digits
 
 };
 
