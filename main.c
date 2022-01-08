@@ -96,25 +96,20 @@ int main(int argc, char *argv[])
                  MAX7219_CLK,
                  MAX7219_LD,
                  MAX7219_DECODE_NONE,
-                 INTENSITY_8,
-                 SCAN_LIMIT_2);
+                 INTENSITY_0,
+                 SCAN_LIMIT_1);
 
-        //max7219_set_digit_segment(DIGIT_0, SEG_B, true);           // A
-        max7219_set_digit_segment(DIGIT_0, SEG_A, true);           // B
-        //max7219_set_digit_segment(DIGIT_1, SEG_A, true);           // C and ALT ? wired together
-        //max7219_set_digit_segment(DIGIT_1, SEG_B, true);           // B
-        //max7219_set_digit_segment(DIGIT_1, SEG_A, true);         // ALT ?
-
+    // HW BUG, this can be uncommented when addressed in circuit - See datasheet
     // Led test
     // blink the board a few times
-    for(int i = 0; i < 1000; i++)
-    {
+    //for(int i = 0; i < 3; i++)
+    //{
         //max7219_set_display_test(TEST_ON);
-        delay(5000);
+        //delay(1000);
         //max7219_set_display_test(TEST_OFF);
-        delay(5000);
-    }
-/*
+        //delay(1000);
+    //}
+
     //init the foot board clone (handles USB comms too)
     b_run = fbv3_init();
 
@@ -140,7 +135,7 @@ int main(int argc, char *argv[])
     }
     
     fbv3_close();
-*/
+
     max7219_set_mode(MODE_SHUTDOWN);
 
     return 0;
@@ -266,7 +261,7 @@ bool gpio_to_fbv3_effect(const bool latching)
 /// @note LED mapping, per schematic
 ///                AMP: CMP  FX1  FX2  FX3  RVB   A    B    C    D   ALT
 ///               CODE: FX1, FX2, FX3, FX4, FX5,  A,   B,   C,   D,  ALT
-/// MAX7219(digit/seg): 0-DP 0-G  0-F  0-E  0-D   0-C  0-B  0-A  1-B  1A
+/// MAX7219(digit/seg): 0-DP 0-G  0-F  0-E  0-D   0-B  0-A  1-A  1-C 1-B
 void fbv3_effect_to_led_status(const bool is_event)
 {
     if(is_event)
@@ -280,11 +275,11 @@ void fbv3_effect_to_led_status(const bool is_event)
         max7219_set_digit_segment(DIGIT_1, SEG_DP, p_fbv3_states->compressor_state > 0 ? true : false); // FX1
         //bank up, no led
         //bank down, no led
-        max7219_set_digit_segment(DIGIT_0, SEG_C, p_fbv3_states->a_state > 0 ? true : false);           // A ?
-        max7219_set_digit_segment(DIGIT_0, SEG_B, p_fbv3_states->b_state > 0 ? true : false);           // D
-        max7219_set_digit_segment(DIGIT_1, SEG_A, p_fbv3_states->c_state > 0 ? true : false);           // C and ALT ?
-        max7219_set_digit_segment(DIGIT_1, SEG_B, p_fbv3_states->d_state > 0 ? true : false);           // B
-        max7219_set_digit_segment(DIGIT_1, SEG_A, p_fbv3_states->alt_state > 0 ? true : false);         // ALT ?
+        max7219_set_digit_segment(DIGIT_0, SEG_B, p_fbv3_states->a_state > 0 ? true : false);           // A
+        max7219_set_digit_segment(DIGIT_0, SEG_A, p_fbv3_states->b_state > 0 ? true : false);           // B
+        max7219_set_digit_segment(DIGIT_1, SEG_A, p_fbv3_states->c_state > 0 ? true : false);           // C
+        max7219_set_digit_segment(DIGIT_1, SEG_C, p_fbv3_states->d_state > 0 ? true : false);           // D
+        max7219_set_digit_segment(DIGIT_1, SEG_B, p_fbv3_states->alt_state > 0 ? true : false);         // ALT
 
         #ifdef FUTURE_MAYBE
         max7219_set_digit_segment(DIGIT_?, SEG_?, p_fbv3_states->wah_state > 0 ? true : false);
