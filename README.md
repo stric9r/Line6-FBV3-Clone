@@ -3,6 +3,8 @@ Clone of USB interface between Line6 FBV3 (foot controller) and a Line6 Spider V
 The FBV3 is simulated using a Raspberry Pi.  
 It's current state only allows for authentication, changing presets, and simple ON/OFF commands for effects. 
 This is still very much a work in progress, mainly need to decipher feedback to get ON/OFF status.
+Regardless, without the feedback, I consider this project done.  It is to my liking in regards of use.  
+Ready to move on to something else.
 
 ## Problems
 The USB interface is slow, even with debouncing at 100ms and the USB timeout at 100ms.  All this was deciphered from the sister application Spider V Remote.  
