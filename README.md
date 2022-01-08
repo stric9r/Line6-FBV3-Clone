@@ -43,7 +43,7 @@ gcc -o fbv3 main.c fbv3_store.c fbv3.c max7219.c -lwiringPi -lusb-1.0
 ## Execution
 Make sure to run with root access.
 To automagically run, place fbv3_startup.sh, default.bin, store.bin, and fbv3 (the program) in /opt/fbv3_clone directory.
-Then add fbv3_startup.sh to /etc/rc.local.
+Then add "sh /opt/fbv3_clone/fbv3_startup.sh" to the end of the /etc/rc.local 
 
 ## File descriptions
 ### fbv3_clone.c
