@@ -4,6 +4,12 @@ The FBV3 is simulated using a Raspberry Pi.
 It's current state only allows for authentication, changing presets, and simple ON/OFF commands for effects. 
 This is still very much a work in progress, mainly need to decipher feedback to get ON/OFF status.
 
+## Problems
+The USB interface is slow, even with debouncing at 100ms and the USB timeout at 100ms.  All this was deciphered from the sister application Spider V Remote.
+The Spider V Remote normally takes ~1 sec from a button press on the PC for an action on the amp.  Similar results happen with this pedal.
+So it's not something that could be used in a professional setting.  This project was more for learning Linux, libUSB, and Wireshark protocol analysis.  
+Either way, it's a fun thing to play with.  If seriously considering creating a mock up FBV3 clone, consider using the RS-422 interface instead in your project.  
+
 ## Platform
 The hardware platforms tested are Raspberry Pi 4B (Linux 5.4.79-v7l+ armv7l) and Raspberry Pi Zero W (Linux 5.4.83+ armv6l)
 
